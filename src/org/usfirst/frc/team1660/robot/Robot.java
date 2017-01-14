@@ -1,10 +1,14 @@
 package org.usfirst.frc.team1660.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
+
 import org.usfirst.frc.team1660.robot.HKdrive;
+
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
+
 import com.ctre.CANTalon;
 //import com.kauailabs.navx;
 
@@ -16,13 +20,25 @@ import com.ctre.CANTalon;
  */
 public class Robot extends SampleRobot {
 	HKdrive robotDrive;
-
+	
+	  //DECLARING JOYSTICK VARIABLES   -jamesey
+		int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
+		int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
+		int STRAFE_AXIS = 0; //Left joystick side to side
+		
+		int LIFTDROP_AXIS = 1; //Left joystick up and down
+		
 	// Channels for the wheels
 	final int kFrontLeftChannel = 2;
 	final int kRearLeftChannel = 3;
 	final int kFrontRightChannel = 1;
 	final int kRearRightChannel = 0;
 
+	//DECLARING JOYSTICK VARIABLES   -jamesey
+	int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
+	int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
+	int STRAFE_AXIS = 0; //Left joystick side to side
+	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
@@ -53,13 +69,58 @@ public class Robot extends SampleRobot {
 		robotDrive.setSafetyEnabled(true);
 		while (isOperatorControl() && isEnabled()) {
 
-			// Use the joystick X axis for lateral movement, Y axis for forward
-			// movement, and Z axis for rotation.
-			// This sample does not use field-oriented drive, so the gyro input
-			// is set to zero.
-			robotDrive.mecanumDrive_Cartesian(stick.getX(), stick.getY(), stick.getZ(), 0);
+			
+			checkJoyStick();
+			
+			
 
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 		}
 	}
+	
+	
+	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Matthew
+	public void checkJoystick()
+	{
+		
+		 double threshold = 0.11;
+		 
+		 double strafe = squareInput(driverStick.getRawAxis(STRAFE_AXIS)) ; // right and left on the left thumb stick?
+		 double moveValue = squareInput(driverStick.getRawAxis(FORWARDBACKWARD_AXIS));// up and down on left thumb stick?
+		 double rotateValue = squareInput(driverStick.getRawAxis(TURNSIDEWAYS_AXIS));// right and left on right thumb stick
+		
+		 //KILL GHOST MOTORS -Matthew & Dianne
+		if(moveValue > threshold*-1 && moveValue < threshold) {
+			moveValue = 0;
+		}
+		if(rotateValue > threshold*-1 && rotateValue < threshold) {
+			rotateValue = 0;
+		}
+		if(strafe > threshold*-1 && strafe < threshold) {
+			strafe = 0;
+		}
+		
+		//MECANUM -Matthew
+		SmartDashboard.putNumber(  "move",        moveValue);
+		SmartDashboard.putNumber(  "rotate",        rotateValue);
+		SmartDashboard.putNumber(  "Strafe",        strafe);
+	    
+		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0); //imu.getYaw()
+		
+	}
+
+	public double squareInput(double x) {
+        if(x > 0 ) {
+      	return Math.pow(x, 4);
+        }
+        else{
+      	  return -1*Math.pow(x, 4); 
+        }
+      }
+
+	
+	
+	
+	
+	
 }
