@@ -1,12 +1,12 @@
 package org.usfirst.frc.team1660.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
+import org.usfirst.frc.team1660.robot.HKdrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import com.ctre.CANTalon;
-import com.kauailabs.navx;
+//import com.kauailabs.navx;
 
 
 
@@ -15,7 +15,7 @@ import com.kauailabs.navx;
  * class.
  */
 public class Robot extends SampleRobot {
-	RobotDrive robotDrive;
+	HKdrive robotDrive;
 
 	// Channels for the wheels
 	final int kFrontLeftChannel = 2;
@@ -29,7 +29,11 @@ public class Robot extends SampleRobot {
 	Joystick stick = new Joystick(kJoystickChannel);
 
 	public Robot() {
-		robotDrive = new RobotDrive(kFrontLeftChannel, kRearLeftChannel, kFrontRightChannel, kRearRightChannel);
+		CANTalon rearLeft = new CANTalon(kRearLeftChannel);
+		CANTalon rearRight = new CANTalon(kRearRightChannel);
+		CANTalon frontLeft = new CANTalon(kFrontLeftChannel);
+		CANTalon frontRight = new CANTalon(kFrontRightChannel);
+		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
 		robotDrive.setInvertedMotor(MotorType.kFrontLeft, true); // invert the
 																	// left side
 																	// motors
