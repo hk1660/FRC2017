@@ -5,9 +5,12 @@ import edu.wpi.first.wpilibj.Joystick;
 import org.usfirst.frc.team1660.robot.HKdrive;
 
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
+import.edu.wpi.first.wpilibj.networktables.NetworkTable;
+
 
 import com.ctre.CANTalon;
 //import com.kauailabs.navx;
@@ -20,6 +23,7 @@ import com.ctre.CANTalon;
  */
 public class Robot extends SampleRobot {
 	HKdrive robotDrive;
+	NetworkTable table;
 	
 	  //DECLARING JOYSTICK VARIABLES   -jamesey
 		int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
@@ -61,16 +65,36 @@ public class Robot extends SampleRobot {
 		robotDrive.setExpiration(0.1);
 	}
 
+	public void robotInit() {
+		
+		table = NetworkTable.getTable("marly");
+		
+	}
+	
+	public void autonomous(){
+		
+	}
+	
+	
 	/**
 	 * Runs the motors with Mecanum drive.
 	 */
 	@Override
 	public void operatorControl() {
 		robotDrive.setSafetyEnabled(true);
+		double x = 0;
+		double y = 0;
+		
 		while (isOperatorControl() && isEnabled()) {
 
 			
 			checkJoyStick();
+			
+			Timer.delay(0.25);
+			table.putNumber("X", x);
+			table.putNumber("Y", y);
+			x += 0.05;
+			y += 1.0;
 			
 			
 
