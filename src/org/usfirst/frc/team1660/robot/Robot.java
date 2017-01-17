@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
-import.edu.wpi.first.wpilibj.networktables.NetworkTable;
+//import.edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 
 import com.ctre.CANTalon;
@@ -37,16 +37,11 @@ public class Robot extends SampleRobot {
 	final int kRearLeftChannel = 3;
 	final int kFrontRightChannel = 1;
 	final int kRearRightChannel = 0;
-
-	//DECLARING JOYSTICK VARIABLES   -jamesey
-	int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
-	int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
-	int STRAFE_AXIS = 0; //Left joystick side to side
 	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
-	Joystick stick = new Joystick(kJoystickChannel);
+	Joystick driverStick = new Joystick(kJoystickChannel);
 
 	public Robot() {
 		CANTalon rearLeft = new CANTalon(kRearLeftChannel);
@@ -88,7 +83,7 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 
 			
-			checkJoyStick();
+			checkJoystick();
 			
 			Timer.delay(0.25);
 			table.putNumber("X", x);
@@ -96,8 +91,6 @@ public class Robot extends SampleRobot {
 			x += 0.05;
 			y += 1.0;
 			
-			
-
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 		}
 	}
