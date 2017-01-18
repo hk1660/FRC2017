@@ -33,10 +33,10 @@ public class Robot extends SampleRobot {
 		int LIFTDROP_AXIS = 1; //Left joystick up and down
 		
 	// Channels for the wheels
-	final int kFrontLeftChannel = 2;
-	final int kRearLeftChannel = 3;
-	final int kFrontRightChannel = 1;
-	final int kRearRightChannel = 0;
+	final int kFrontLeftChannel = 1;
+	final int kRearLeftChannel = 2;
+	final int kFrontRightChannel = 4;
+	final int kRearRightChannel = 3;
 	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
@@ -44,15 +44,16 @@ public class Robot extends SampleRobot {
 	Joystick driverStick = new Joystick(kJoystickChannel);
 
 	public Robot() {
-		CANTalon rearLeft = new CANTalon(kRearLeftChannel);
-		CANTalon rearRight = new CANTalon(kRearRightChannel);
 		CANTalon frontLeft = new CANTalon(kFrontLeftChannel);
+		CANTalon rearLeft = new CANTalon(kRearLeftChannel);
 		CANTalon frontRight = new CANTalon(kFrontRightChannel);
+		CANTalon rearRight = new CANTalon(kRearRightChannel);
+		
 		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
-		robotDrive.setInvertedMotor(MotorType.kFrontLeft, true); // invert the
+		//robotDrive.setInvertedMotor(MotorType.kFrontLeft, true); // invert the
 																	// left side
 																	// motors
-		robotDrive.setInvertedMotor(MotorType.kRearLeft, true); // you may need
+		//robotDrive.setInvertedMotor(MotorType.kRearLeft, true); // you may need
 																// to change or
 																// remove this
 																// to match your
@@ -85,13 +86,17 @@ public class Robot extends SampleRobot {
 			
 			checkJoystick();
 			
+			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
+
+/*		
 			Timer.delay(0.25);
 			table.putNumber("X", x);
 			table.putNumber("Y", y);
 			x += 0.05;
 			y += 1.0;
+*/			
+
 			
-			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 		}
 	}
 	
