@@ -1,26 +1,19 @@
 package org.usfirst.frc.team1660.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
 
 import org.usfirst.frc.team1660.robot.HKdrive;
-
+import org.usfirst.frc.team1660.robot.GripPipeline;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
-//import.edu.wpi.first.wpilibj.networktables.NetworkTable;
-
-
+import.edu.wpi.first.wpilibj.networktables.NetworkTable;
 import com.ctre.CANTalon;
-//import com.kauailabs.navx;
+import com.kauailabs.navx;
 
 
-
-/**
- * This is a demo program showing how to use Mecanum control with the RobotDrive
- * class.
- */
 public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	NetworkTable table;
@@ -29,9 +22,7 @@ public class Robot extends SampleRobot {
 		int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
 		int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
 		int STRAFE_AXIS = 0; //Left joystick side to side
-		
-		int LIFTDROP_AXIS = 1; //Left joystick up and down
-		
+				
 	// Channels for the wheels
 	final int kFrontLeftChannel = 1;
 	final int kRearLeftChannel = 2;
@@ -50,14 +41,7 @@ public class Robot extends SampleRobot {
 		CANTalon rearRight = new CANTalon(kRearRightChannel);
 		
 		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
-		//robotDrive.setInvertedMotor(MotorType.kFrontLeft, true); // invert the
-																	// left side
-																	// motors
-		//robotDrive.setInvertedMotor(MotorType.kRearLeft, true); // you may need
-																// to change or
-																// remove this
-																// to match your
-																// robot
+		
 		robotDrive.setExpiration(0.1);
 	}
 
