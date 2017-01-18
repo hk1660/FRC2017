@@ -14,10 +14,12 @@ import edu.wpi.first.wpilibj.Timer;
 import.edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 import com.ctre.CANTalon;
-import com.kauailabs.navx;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SPI;
 
 
 public class Robot extends SampleRobot {
+	AHRS ahrs;
 	HKdrive robotDrive;
 	NetworkTable table;
 	
@@ -44,8 +46,18 @@ public class Robot extends SampleRobot {
 		CANTalon rearRight = new CANTalon(kRearRightChannel);
 		
 		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
-		
 		robotDrive.setExpiration(0.1);
+		
+		   try {
+				/***********************************************************************
+				 * navX-MXP:
+				 * - Communication via RoboRIO MXP (SPI, I2C, TTL UART) and USB.            
+				 * - See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface.
+				 ************************************************************************/
+	            ahrs = new AHRS(SPI.Port.kMXP); 
+	        } catch (RuntimeException ex ) {
+	            DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+	        }
 	}
 	
 	
@@ -143,7 +155,7 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber(  "move",        moveValue);
 		SmartDashboard.putNumber(  "rotate",        rotateValue);
 		SmartDashboard.putNumber(  "Strafe",        strafe);
-	    
+		SmartDashboard.putNumber("angle", ahrs.getAngle() );
 		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0); //imu.getYaw()
 		
 	}
