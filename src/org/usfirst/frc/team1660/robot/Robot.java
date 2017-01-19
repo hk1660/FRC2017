@@ -211,10 +211,12 @@ public class Robot extends SampleRobot {
 	/* BASE AUTO FUNCTIONS */
 	public void goForwardAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
-		
-		
-		
 	}
+	public void goBackwardAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(0, 0, -speed, 0);
+	}
+
+	
 	
 	public void stopDrive() {
 		robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
@@ -240,6 +242,10 @@ public class Robot extends SampleRobot {
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
 	
+	public void placePeg() {
+		
+	}
+	
 	public void strategyDestinationPin (Timer timerAuto){
 
 		
@@ -255,7 +261,29 @@ public class Robot extends SampleRobot {
 		}
 	}
 	
-	
+	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
+		double timerA = timerAuto.get();
+		
+		if(timerA < 2) {
+			goForwardAtSpeed(0.3);
+		}else if(timerA < 3   ){
+			turnRightAtSpeed(double speed );
+		} else if (timerA < 4){ 
+			goForwardAtSpeed(0.3);
+		} else if (timerA < 5){
+			placePeg();
+		} else if (timerA < 6) {
+		    goBackwardAtSpeed(0.3);
+		} else if(timerA < 7) {
+		    turnLeftAtSpeed(0.3)
+		} else if (timerA < 8){
+		    goFowardAtSpeed(0.3)
+		} else{
+			stopDrive();
+		}
+		
+		
+	}	
 	
 	
 }
