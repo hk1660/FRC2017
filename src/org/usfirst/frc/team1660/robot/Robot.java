@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
-import.edu.wpi.first.wpilibj.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
@@ -56,7 +56,7 @@ public class Robot extends SampleRobot {
 				 ************************************************************************/
 	            ahrs = new AHRS(SPI.Port.kMXP); 
 	        } catch (RuntimeException ex ) {
-	            DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+	            //DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 	        }
 	}
 	
@@ -71,18 +71,24 @@ public class Robot extends SampleRobot {
 	
 	/* This function is run once each time the robot enters autonomous mode */
 	public void autonomousInit() {
+		/*
 		timer.reset();
 		timer.start();
+		*/
 	}
 
 	/* This function is called periodically during autonomous */
 	public void autonomousPeriodic() {
+		
+		/*
 		// Drive for 2 seconds
 		if (timer.get() < 2.0) {
-			myRobot.drive(-0.5, 0.0); // drive forwards half speed
+			robotDrive.drive(-0.5, 0.0); // drive forwards half speed
 		} else {
-			myRobot.drive(0.0, 0.0); // stop robot
+			robotDrive.drive(0.0, 0.0); // stop robot
 		}
+
+	*/
 	}
 	
 	/* This function is called once each time the robot enters tele-operated mode */
