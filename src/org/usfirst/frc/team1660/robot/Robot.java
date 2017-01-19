@@ -3,7 +3,6 @@ package org.usfirst.frc.team1660.robot;
 
 import org.usfirst.frc.team1660.robot.HKdrive;
 import org.usfirst.frc.team1660.robot.GripPipeline;
-
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -12,7 +11,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;import org.usfirst.frc.team1660.robot.HKdrive;
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
@@ -22,6 +22,11 @@ public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
 	NetworkTable table;
+	
+	//SmartDashboard objects
+	SendableChooser startingPosition;
+	SendableChooser strategy;
+
 	
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
@@ -66,29 +71,41 @@ public class Robot extends SampleRobot {
 	public void robotInit() {
 		
 		table = NetworkTable.getTable("marly");
+
+		//CHOOSING AUTO MODE
+	    startingPosition = new SendableChooser();
+        startingPosition.addDefault("Left", new Integer(1));
+        startingPosition.addObject("Middle", new Integer(2));
+        startingPosition.addObject("Right", new Integer(3));
+        SmartDashboard.putData("startingPosition", startingPosition);
+        
+        strategy = new SendableChooser();
+        strategy.addDefault("Move forward only", new Integer(1));
+
+        SmartDashboard.putData("strategy selector", strategy);
 		
 	}
 	
-	/* This function is run once each time the robot enters autonomous mode */
-	public void autonomousInit() {
-		/*
-		timer.reset();
-		timer.start();
-		*/
-	}
 
 	/* This function is called periodically during autonomous */
-	public void autonomousPeriodic() {
+	public void autonomous() {
 		
-		/*
-		// Drive for 2 seconds
-		if (timer.get() < 2.0) {
-			robotDrive.drive(-0.5, 0.0); // drive forwards half speed
-		} else {
-			robotDrive.drive(0.0, 0.0); // stop robot
-		}
+	
+		 Timer timerAuto = new Timer();
+		 timerAuto.start(); 
+	//	 int currentStrategy = (int) strategy.getSelected(); 
+		 while(isAutonomous() && isEnabled()){ 
+			  
+			 
+			 double timerA = timerAuto.get();
+			 SmartDashboard.putNumber("match time",timerA);
+		//	   if(currentStrategy == 1) {
+			    	runAutoStrategy_GoForwardOnly(timerAuto); 
+			//     }  
+		 
+		 }
 
-	*/
+	
 	}
 	
 	/* This function is called once each time the robot enters tele-operated mode */
@@ -134,8 +151,9 @@ public class Robot extends SampleRobot {
 	}
 	
 	
-	/* CUSTOM FUNCTIONS */
 	
+	
+	/* TELEOP FUNCTIONS */
 	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Matthew
 	public void checkJoystick()
 	{
@@ -176,6 +194,53 @@ public class Robot extends SampleRobot {
       }
 
 	
+
+	/* BASE AUTO FUNCTIONS */
+	public void goForwardAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
+		
+		
+		
+	}
+	
+	public void stopDrive() {
+		robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+	}
+	
+	public void strafeLeftAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
+	}
+	
+	public void strafeRightAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
+	}
+	
+	public void turnLeftAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(0, speed, 0, 0);
+	}
+	
+	public void turnRightAtSpeed(double speed) {
+		robotDrive.mecanumDrive_Cartesian(0, -speed, 0, 0);
+	}
+	
+	public void turnAndStrafe(double strafeSpeed, double turnSpeed) {
+		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
+	}
+	
+	public void strategyDestinationPin (Timer timerAuto){
+
+		
+	}
+	
+	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
+		double timerA = timerAuto.get();
+		if(timerA < 2) {
+			goForwardAtSpeed(0.3);
+		}
+		else{
+			stopDrive();
+		}
+	}
 	
 	
 	
