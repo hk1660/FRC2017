@@ -1,6 +1,7 @@
 package org.usfirst.frc.team1660.robot;
 
-
+import edu.wpi.cscore.CvSource;
+import edu.wpi.first.wpilibj.CameraServer;
 import org.usfirst.frc.team1660.robot.HKdrive;
 import org.usfirst.frc.team1660.robot.GripPipeline;
 import edu.wpi.first.wpilibj.Joystick;
@@ -71,6 +72,18 @@ public class Robot extends SampleRobot {
 	public void robotInit() {
 		
 		table = NetworkTable.getTable("marly");
+		// Creates UsbCamera and MjpegServer [1] and connects them
+
+		CameraServer.getInstance().startAutomaticCapture();
+		
+
+		// Creates the CvSink and connects it to the UsbCamera 
+		CvSink cvSink = CameraServer.getInstance().getVideo();
+		
+
+		// Creates the CvSource and MjpegServer [2] and connects them 
+		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
+		
 
 		//CHOOSING AUTO MODE
 	    startingPosition = new SendableChooser();
