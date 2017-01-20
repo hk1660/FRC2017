@@ -1,6 +1,6 @@
-/* Modified version of FRC's WPI RoboDrive class */
-
 package org.usfirst.frc.team1660.robot;
+
+/* Modified version of FRC's WPI RoboDrive class */
 
 import com.ctre.CANTalon;
 

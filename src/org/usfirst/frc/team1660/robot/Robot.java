@@ -1,9 +1,11 @@
 package org.usfirst.frc.team1660.robot;
 
 import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
-import org.usfirst.frc.team1660.robot.HKdrive;
 import org.usfirst.frc.team1660.robot.GripPipeline;
+import org.usfirst.frc.team1660.robot.HKdrive;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -13,7 +15,7 @@ import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;import org.usfirst.frc.team1660.robot.HKdrive;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
@@ -30,9 +32,9 @@ public class Robot extends SampleRobot {
 
 	
   //DECLARING JOYSTICK VARIABLES   -jamesey
-	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
-	final int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
-	final int STRAFE_AXIS = 0; //Left joystick side to side
+	final int kForwardAxis = 1; //Left joystick up and down
+	final int kTurningAxis = 4; //Right joystick side to side
+	final int kStrafingAxis = 0; //Left joystick side to side
 				
 	// Channels for the wheels
 	final int kFrontLeftChannel = 1;
@@ -62,7 +64,7 @@ public class Robot extends SampleRobot {
 				 ************************************************************************/
 	            ahrs = new AHRS(SPI.Port.kMXP); 
 	        } catch (RuntimeException ex ) {
-	            //DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+	            DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 	        }
 	}
 	
@@ -72,30 +74,29 @@ public class Robot extends SampleRobot {
 	public void robotInit() {
 		
 		table = NetworkTable.getTable("marly");
+		
 		// Creates UsbCamera and MjpegServer [1] and connects them
-
 		CameraServer.getInstance().startAutomaticCapture();
 		
-
+		// Creates the CvSource and MjpegServer [2] and connects them 
+		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
+		
 		// Creates the CvSink and connects it to the UsbCamera 
 		CvSink cvSink = CameraServer.getInstance().getVideo();
 		
 
-		// Creates the CvSource and MjpegServer [2] and connects them 
-		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
-		
 
 		//CHOOSING AUTO MODE
 	    startingPosition = new SendableChooser();
         startingPosition.addDefault("Left", new Integer(1));
         startingPosition.addObject("Middle", new Integer(2));
         startingPosition.addObject("Right", new Integer(3));
-        SmartDashboard.putData("startingPosition", startingPosition);
+        SmartDashboard.putData("Choose Start Position: ", startingPosition);
         
         strategy = new SendableChooser();
         strategy.addDefault("Move forward only", new Integer(1));
-
-        SmartDashboard.putData("strategy selector", strategy);
+        strategy.addObject("Left Peg Scoring",  new Integer(2));
+        SmartDashboard.putData("Choose Auto Strategy: ", strategy);
 		
 	}
 	
@@ -114,7 +115,9 @@ public class Robot extends SampleRobot {
 			 SmartDashboard.putNumber("match time",timerA);
 		//	   if(currentStrategy == 1) {
 			    	runAutoStrategy_GoForwardOnly(timerAuto); 
-			//     }  
+		//     } else if (currentStrategy == 2) {
+		//	    	runAutoStrategy_PlaceGearLeftPeg(timerAuto);
+		// 	   }
 		 
 		 }
 
@@ -167,17 +170,18 @@ public class Robot extends SampleRobot {
 	
 	
 	/* TELEOP FUNCTIONS */
-	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Matthew
+	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Matthew M
 	public void checkJoystick()
 	{
 		
 		 double threshold = 0.11;
 		 
-		 double strafe = squareInput(driverStick.getRawAxis(STRAFE_AXIS)) ; // right and left on the left thumb stick?
-		 double moveValue = squareInput(driverStick.getRawAxis(FORWARDBACKWARD_AXIS));// up and down on left thumb stick?
-		 double rotateValue = squareInput(driverStick.getRawAxis(TURNSIDEWAYS_AXIS));// right and left on right thumb stick
-		
-		 //KILL GHOST MOTORS -Matthew & Dianne
+		 double strafe = curveInput(driverStick.getRawAxis(kStrafingAxis)) ; // right and left on the left thumb stick?
+		 double moveValue = curveInput(driverStick.getRawAxis(kForwardAxis));// up and down on left thumb stick?
+		 double rotateValue = curveInput(driverStick.getRawAxis(kTurningAxis));// right and left on right thumb stick
+		 double angle = ahrs.getAngle();
+		 
+		 //KILL GHOST MOTORS -Matthew M
 		if(moveValue > threshold*-1 && moveValue < threshold) {
 			moveValue = 0;
 		}
@@ -188,16 +192,16 @@ public class Robot extends SampleRobot {
 			strafe = 0;
 		}
 		
-		//MECANUM -Matthew
+		//MECANUM -Malachi P
 		SmartDashboard.putNumber(  "move",        moveValue);
 		SmartDashboard.putNumber(  "rotate",        rotateValue);
 		SmartDashboard.putNumber(  "Strafe",        strafe);
-		SmartDashboard.putNumber("angle", ahrs.getAngle() );
+		SmartDashboard.putNumber("angle", 			angle );
 		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0); //imu.getYaw()
 		
 	}
 
-	public double squareInput(double x) {
+	public double curveInput(double x) {
         if(x > 0 ) {
       	return Math.pow(x, 4);
         }
@@ -215,29 +219,21 @@ public class Robot extends SampleRobot {
 	public void goBackwardAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, 0, -speed, 0);
 	}
-
-	
-	
 	public void stopDrive() {
 		robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
 	}
-	
 	public void strafeLeftAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
 	}
-	
 	public void strafeRightAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
 	}
-	
 	public void turnLeftAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, speed, 0, 0);
 	}
-	
 	public void turnRightAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, -speed, 0, 0);
 	}
-	
 	public void turnAndStrafe(double strafeSpeed, double turnSpeed) {
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
@@ -251,6 +247,7 @@ public class Robot extends SampleRobot {
 		
 	}
 	
+	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
 		double timerA = timerAuto.get();
 		if(timerA < 2) {
@@ -261,23 +258,24 @@ public class Robot extends SampleRobot {
 		}
 	}
 	
+	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
 		double timerA = timerAuto.get();
 		
-		if(timerA < 2) {
+		if(timerA < 2.0) {
 			goForwardAtSpeed(0.3);
-		}else if(timerA < 3   ){
-			turnRightAtSpeed(double speed );
-		} else if (timerA < 4){ 
+		}else if(timerA < 3.0){
+			turnRightAtSpeed(0.3);
+		} else if (timerA < 4.0){ 
 			goForwardAtSpeed(0.3);
-		} else if (timerA < 5){
+		} else if (timerA < 5.0){
 			placePeg();
-		} else if (timerA < 6) {
+		} else if (timerA < 6.0) {
 		    goBackwardAtSpeed(0.3);
-		} else if(timerA < 7) {
-		    turnLeftAtSpeed(0.3)
-		} else if (timerA < 8){
-		    goFowardAtSpeed(0.3)
+		} else if(timerA < 7.0) {
+		    turnLeftAtSpeed(0.3);
+		} else if (timerA < 8.0){
+			goForwardAtSpeed(0.3);
 		} else{
 			stopDrive();
 		}
