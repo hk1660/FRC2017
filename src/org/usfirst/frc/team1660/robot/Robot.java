@@ -50,7 +50,16 @@ public class Robot extends SampleRobot {
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
+	//values for coordinates of the peg, the robot sees
+	int target1x;
+	int target1y;
+	int target2x;
+	int target2y;
+	int finalPegx;
+	int finalPegy;
+	
 	Joystick driverStick = new Joystick(kJoystickChannel);
+
 
 	public Robot() {
 		CANTalon frontLeft = new CANTalon(kFrontLeftChannel);
@@ -142,8 +151,14 @@ public class Robot extends SampleRobot {
 
 	
 	}
-
-	
+//this method finds the coordinates of the peg
+	public void findPeg() {
+		PegX = (Target1x + Target2x ) /2;
+		PexY = (Target1y + Target2y ) /2;
+		finalPegX = PegX;
+		finalPegy = PegY;
+	}
+	}
 	public void operatorControl() {
 		System.out.println("operatorControl");
 		robotDrive.setSafetyEnabled(true);
