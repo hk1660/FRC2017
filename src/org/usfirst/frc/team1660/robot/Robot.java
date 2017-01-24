@@ -153,10 +153,10 @@ public class Robot extends SampleRobot {
 	}
 //this method finds the coordinates of the peg
 	public void findPeg() {
-		PegX = (Target1x + Target2x ) /2;
-		PexY = (Target1y + Target2y ) /2;
-		finalPegX = PegX;
-		finalPegy = PegY;
+		pegX = (target1x + target2x ) /2;
+		PexY = (target1y + target2y ) /2;
+		finalPegx = pegX;
+		finalPegy = pegY;
 	}
 	}
 	public void operatorControl() {
