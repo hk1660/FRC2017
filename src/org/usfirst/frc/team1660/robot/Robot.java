@@ -19,12 +19,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
-
+import edu.wpi.first.wpilibj.vision.VisionRunner;
+import edu.wpi.first.wpilibj.vision.VisionThread;
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
 	NetworkTable table;
+	private  VisionThread visionThread;
 	
 	//SmartDashboard objects
 	SendableChooser startingPosition;
@@ -43,7 +45,7 @@ public class Robot extends SampleRobot {
 	final int kRearRightChannel = 3;
 	
 	// The channel on the driver station that the joystick is connected to
-	final int kJoystickChannel = 0;
+	final int kJoystickChannel = 2;
 
 	Joystick driverStick = new Joystick(kJoystickChannel);
 
@@ -53,7 +55,7 @@ public class Robot extends SampleRobot {
 		CANTalon frontRight = new CANTalon(kFrontRightChannel);
 		CANTalon rearRight = new CANTalon(kRearRightChannel);
 		
-		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
+	HKdrive	robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
 		robotDrive.setExpiration(0.1);
 		
 		   try {
@@ -73,10 +75,11 @@ public class Robot extends SampleRobot {
 	  used for any initialization code. */
 	public void robotInit() {
 		
+		NetworkTable.setIPAddress("10.16.60.63");
 		table = NetworkTable.getTable("marly");
 		
 		// Creates UsbCamera and MjpegServer [1] and connects them
-		CameraServer.getInstance().startAutomaticCapture();
+		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 		
 		// Creates the CvSource and MjpegServer [2] and connects them 
 		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
@@ -84,7 +87,22 @@ public class Robot extends SampleRobot {
 		// Creates the CvSink and connects it to the UsbCamera 
 		CvSink cvSink = CameraServer.getInstance().getVideo();
 		
-
+		//pipeline.process(camera);
+		
+	    visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
+	        if (!pipeline.filterContoursOutput().isEmpty()) {
+	  
+	            System.out.println(pipeline.filterContoursOutput().get(0));
+	            //SmartDashboard.putNumber("opencv",pipeline.filterContoursOutput().get(0));
+	            table = NetworkTable.getTable("GRIP/marly");
+	        
+	            double[] def = new double[0];
+	            double[] areas = table.getNumberArray("width", def);
+	            System.out.println(areas[0]);
+	        }
+	    });
+	    visionThread.start();
+		
 
 		//CHOOSING AUTO MODE
 	    startingPosition = new SendableChooser();
@@ -126,18 +144,18 @@ public class Robot extends SampleRobot {
 	
 	/* This function is called once each time the robot enters tele-operated mode */
 	public void teleopInit() {
-		
+		System.out.println("teleop init");
 	}
 
 	/* This function is called periodically during operator control */
 	public void teleopPeriodic() {
-		
+		System.out.println("teleop");
 		robotDrive.setSafetyEnabled(true);
 		double x = 0;
 		double y = 0;
 		
 		while (isOperatorControl() && isEnabled()) {
-
+			System.out.println("in teleop loop");
 			
 			checkJoystick();
 			
@@ -157,6 +175,12 @@ public class Robot extends SampleRobot {
 
 
 	public void operatorControl() {
+		System.out.println("operator control");
+		
+		while (true)
+		{
+			teleopPeriodic();
+		}
 
 	}
 	
@@ -191,7 +215,7 @@ public class Robot extends SampleRobot {
 		if(strafe > threshold*-1 && strafe < threshold) {
 			strafe = 0;
 		}
-		
+		System.out.println("about to put numbers");
 		//MECANUM -Malachi P
 		SmartDashboard.putNumber(  "move",        moveValue);
 		SmartDashboard.putNumber(  "rotate",        rotateValue);
