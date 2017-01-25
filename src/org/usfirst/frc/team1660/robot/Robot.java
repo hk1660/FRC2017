@@ -23,7 +23,8 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
-
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilijbj.SimpleRobot;
 
 
 public class Robot extends SampleRobot {
@@ -36,7 +37,7 @@ public class Robot extends SampleRobot {
 	//SmartDashboard objects
 	SendableChooser startingPosition;
 	SendableChooser strategy;
-
+	limitSwitch = new DigitalInput(0);
 	
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
@@ -52,6 +53,30 @@ public class Robot extends SampleRobot {
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
+	// limitswitch
+	public Hova(){
+		
+		// if limit switch is touched Hova moves upward
+		if(limitSwitch.get().equals(1)){
+	
+			
+			// hova moves up
+			
+		}
+		else {
+			
+		}
+		
+		
+		
+		
+		
+		
+	}
+	
+	
+	
+	
 	//values for coordinates of the peg, the robot sees
 	int target1x;
 	int target1y;
@@ -63,7 +88,8 @@ public class Robot extends SampleRobot {
 	int pegY;
 	
 	Joystick driverStick = new Joystick(kJoystickChannel);
-
+   
+		
 
 	public Robot() {
 		CANTalon frontLeft = new CANTalon(kFrontLeftChannel);
@@ -90,6 +116,12 @@ public class Robot extends SampleRobot {
 	/* This function is run when the robot is first started up and should be
 	  used for any initialization code. */
 	public void robotInit() {
+		
+		// limit switch object
+		
+		
+		
+		
 		
 		NetworkTable.setIPAddress("10.16.60.63");
 		table = NetworkTable.getTable("marly");
@@ -131,7 +163,7 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
-		
+		limitSwitch.addobject(limt)
 	}
 	
 
