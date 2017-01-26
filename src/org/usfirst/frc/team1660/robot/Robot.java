@@ -67,6 +67,8 @@ public class Robot extends SampleRobot {
 	int pegX;
 	int pegY;
 	double distanceFromWall = -2.0;
+	Rect r0;
+	Rect r1;
 	
 	Joystick driverStick = new Joystick(kJoystickChannel);
    
@@ -158,8 +160,7 @@ public class Robot extends SampleRobot {
 		 timerAuto.start(); 
 	//	 int currentStrategy = (int) strategy.getSelected(); 
 		 while(isAutonomous() && isEnabled()){ 
-			  
-			 
+        	
 			 double timerA = timerAuto.get();
 			 SmartDashboard.putNumber("match time",timerA);
 		//	   if(currentStrategy == 1) {
@@ -186,6 +187,8 @@ public class Robot extends SampleRobot {
 	        checkGyro();
 	        getDistanceFar();
 	        getDistanceClose();
+	        
+	        findPeg();
 
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
@@ -401,10 +404,24 @@ public class Robot extends SampleRobot {
 		
 	}
 	
-	//this method finds the coordinates of the peg -Imani L
+	//this method finds the coordinates of the peg -Imani L & Marlahna M
 		public void findPeg() {
+			
+	        SmartDashboard.putNumber("Rec1 X", r1.x );
+        	SmartDashboard.putNumber("Rec0 X", r0.x );
+			
+        	target1x = r0.x + r0.width/2;
+        	target1y = r0.y + r0.height/2;
+        	target2x = r1.x + r1.width/2;
+        	target2y = r1.y + r1.height/2;
+        	
 			pegX = (target1x + target2x ) /2;
 			pegY = (target1y + target2y ) /2;
+			
+			SmartDashboard.putNumber("pegX", pegX);
+			SmartDashboard.putNumber("pegY", pegY);
+			
+			
 		}
 		
 		//this method places a gear on a peg -Shivanie H
