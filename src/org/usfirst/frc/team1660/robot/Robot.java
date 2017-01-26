@@ -24,20 +24,25 @@ import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilijbj.SimpleRobot;
-
+import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DigitalOutput;
+//import edu.wpi.first.wpilibj.SimpleRobot;
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
-	AnalogInput ultraSonic = new AnalogInput(0);
+	AnalogInput ultraSonicLong = new AnalogInput(0);
+	DigitalOutput output = new DigitalOutput(8);
+	DigitalInput input = new DigitalInput (9);
+	Ultrasonic ultraSonicShort = new Ultrasonic(output,input);
 	NetworkTable table;
 	private  VisionThread visionThread;
 	
 	//SmartDashboard objects
 	SendableChooser startingPosition;
 	SendableChooser strategy;
-	limitSwitch = new DigitalInput(0);
+	
 	
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
@@ -53,26 +58,7 @@ public class Robot extends SampleRobot {
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
-	// limitswitch
-	public Hova(){
-		
-		// if limit switch is touched Hova moves upward
-		if(limitSwitch.get().equals(1)){
 	
-			
-			// hova moves up
-			
-		}
-		else {
-			
-		}
-		
-		
-		
-		
-		
-		
-	}
 	
 	
 	
@@ -163,7 +149,6 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
-		limitSwitch.addobject(limt)
 	}
 	
 
@@ -201,8 +186,8 @@ public class Robot extends SampleRobot {
 	          
 	          checkJoystick();
 	          //checkGyro();
-	          getDistance();
-			
+	          getDistanceFar();
+	          getDistanceClose();
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
 		
@@ -268,15 +253,7 @@ public class Robot extends SampleRobot {
 
 	/*SENSOR ACCESSOR METHODS */
 	
-	public double getDistance(){
-		
-		double x = ultraSonic.getAverageVoltage();
-		double imani = 20*x*x + 2.56*x + 1m2.45;
-        SmartDashboard.putNumber("Ahmed ultra", x);
-        SmartDashboard.putNumber("Ahmed imaniUltra", imani);
-    	return imani;
-        
-	}
+	
 	
 	public void checkGyro(){
 		boolean zero_yaw_pressed = driverStick.getTrigger();
@@ -457,11 +434,28 @@ public class Robot extends SampleRobot {
 			
 		}		
 	
-	/*
+	
 	//method to be used aim in autonomous mode -Keon
-	public void aimRobot() { 
+		public double getDistanceFar(){
+			
+			double x = ultraSonicLong.getAverageVoltage();
+			double distanceInInches = 20*x*x + 2.56*x + 12.45;
+			
+	        SmartDashboard.putNumber("Distance (Far)", x);
+	    	return distanceInInches;
+	        
+		}
+		public double getDistanceClose(){
+			
+			double x = ultraSonicShort.getRangeInches();
+			double distanceInInches;
+			 SmartDashboard.putNumber("Distance (Close)", x);
+		    	return x;
+		}
+	/*
+		public void aimRobot() { 
 		
-		while(ultraSonic.getRangeInches() > distanceFromWall) { //to loop until at acceptable distance (Within Range)
+		while(ultraSonicLong.getRangeInches() > distanceFromWall) { //to loop until at acceptable distance (Within Range)
 			int finalPegX = pegX; // Updates the x value of the "Peg"
 			//int finalPegY = pegY;
 			int ultraSonic = distanceFromWall; //Updates distance/Value
@@ -475,9 +469,9 @@ public class Robot extends SampleRobot {
 			}
 		}
 		
-	*/	
+	
 
 
-
+*/
 }
 	
