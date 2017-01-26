@@ -1,6 +1,7 @@
 package org.usfirst.frc.team1660.robot;
 
-
+import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Rect;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.UsbCamera;
@@ -25,35 +26,26 @@ import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
-<<<<<<< HEAD
-
-=======
 import edu.wpi.first.wpilibj.DigitalOutput;
->>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
-
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
+
 	AnalogInput ultraSonicLong = new AnalogInput(0);
 	DigitalOutput output = new DigitalOutput(8);
 	DigitalInput input = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(output,input);
+	DigitalInput limitSwitch = new DigitalInput(0);
+	
 	NetworkTable table;
 	private  VisionThread visionThread;
 	
 	//SmartDashboard objects
 	SendableChooser startingPosition;
-<<<<<<< HEAD
 	SendableChooser strategy;
-	DigitalInput limitSwitch = new DigitalInput(0);
 	
-=======
-	SendableChooser strategy;
-	DigitalInput limitSwitch = new DigitalInput(0);
-
->>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
-  //DECLARING JOYSTICK VARIABLES   -jamesey
+	//DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
 	final int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
 	final int STRAFE_AXIS = 0; //Left joystick side to side
@@ -66,24 +58,18 @@ public class Robot extends SampleRobot {
 	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
 	//values for coordinates of the peg, the robot sees
 	int target1x;
 	int target1y;
 	int target2x;
 	int target2y;
-	int finalPegx;
-	int finalPegy;
 	int pegX;
 	int pegY;
+	double distanceFromWall = -2.0;
 	
 	Joystick driverStick = new Joystick(kJoystickChannel);
    
-		
 
 	public Robot() {
 		CANTalon frontLeft = new CANTalon(kFrontLeftChannel);
@@ -102,7 +88,7 @@ public class Robot extends SampleRobot {
 				 ************************************************************************/
 	            ahrs = new AHRS(SPI.Port.kMXP); 
 	        } catch (RuntimeException ex ) {
-	            //DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+	            DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 	        }
 	}
 	
@@ -110,15 +96,9 @@ public class Robot extends SampleRobot {
 	/* This function is run when the robot is first started up and should be
 	  used for any initialization code. */
 	public void robotInit() {
-		
-		// limit switch object
-		
-		
-		
-		
-		
-		NetworkTable.setIPAddress("10.16.60.63");
-		table = NetworkTable.getTable("marly");
+
+		//NetworkTable.setIPAddress("10.16.60.63");
+		//table = NetworkTable.getTable("marly");
 		
 		// Creates UsbCamera and MjpegServer [1] and connects them
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
@@ -134,15 +114,22 @@ public class Robot extends SampleRobot {
 	    visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 	        if (!pipeline.filterContoursOutput().isEmpty()) {
 	  
-	        	Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput ().get(0));
-	        	SmartDashboard.putString("CamRec X", r.x );
-	            //System.out.println(pipeline.filterContoursOutput().get(0));
+	        	Rect r0 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
+	        	SmartDashboard.putNumber("Rec0 X", r0.x );
+	        	
+	        	if(pipeline.filterContoursOutput().size() > 1){
+		        	Rect r1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
+		        	SmartDashboard.putNumber("Rec1 X", r1.x );
+	        	}
+	           
+	        	
+	        	//System.out.println(pipeline.filterContoursOutput().get(0));
 	            //SmartDashboard.putNumber("opencv",pipeline.filterContoursOutput().get(0));
-	            table = NetworkTable.getTable("GRIP/marly");
+	            //table = NetworkTable.getTable("GRIP/marly");
 	        
-	            double[] def = new double[0];
-	            double[] areas = table.getNumberArray("width", def);
-	            System.out.println(areas[0]);
+	            //double[] def = new double[0];
+	            //double[] areas = table.getNumberArray("width", def);
+	            //System.out.println(areas[0]);
 	        }
 	    });
 	    visionThread.start();
@@ -159,11 +146,7 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
-<<<<<<< HEAD
-		//limitSwitch.addobject(limt)
-=======
 
->>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
 	}
 	
 
@@ -196,13 +179,13 @@ public class Robot extends SampleRobot {
 		double y = 0;
 		
 		while (isOperatorControl() && isEnabled()) {
-			 //System.out.println("operatorControl2");
-	          //Timer.delay(0.020);		/* wait for one motor update time period (50Hz)     */
+			//System.out.println("operatorControl2");
+	        //Timer.delay(0.020);		/* wait for one motor update time period (50Hz)     */
 	          
-	          checkJoystick();
-	          //checkGyro();
-	          getDistanceFar();
-	          getDistanceClose();
+	        checkJoystick();
+	        checkGyro();
+	        getDistanceFar();
+	        getDistanceClose();
 
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
@@ -219,26 +202,17 @@ public class Robot extends SampleRobot {
 	}
 	
 	
-	/* This function is called periodically during test mode 
-	public void testPeriodic() {
-		LiveWindow.run();
-	}
-	*/
-	
-	
-	
 	/* TELEOP FUNCTIONS */
-	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Matthew
+	//MOVE DRIVETRAIN WITH XBOX360 JOYSTICKS -Malachi P
 	public void checkJoystick()
 	{
 		
 		 double threshold = 0.11;
-		 
 		 double strafe = squareInput(driverStick.getRawAxis(STRAFE_AXIS)) ; // right and left on the left thumb stick?
 		 double moveValue = squareInput(driverStick.getRawAxis(FORWARDBACKWARD_AXIS));// up and down on left thumb stick?
 		 double rotateValue = squareInput(driverStick.getRawAxis(TURNSIDEWAYS_AXIS));// right and left on right thumb stick
 		
-		 //KILL GHOST MOTORS -Matthew & Dianne
+		 //KILL GHOST MOTORS -Matthew M
 		if(moveValue > threshold*-1 && moveValue < threshold) {
 			moveValue = 0;
 		}
@@ -249,7 +223,7 @@ public class Robot extends SampleRobot {
 			strafe = 0;
 		}
 		
-		//MECANUM -Matthew
+		//MECANUM -Malachi P
 		SmartDashboard.putNumber(  "move",        moveValue);
 		SmartDashboard.putNumber(  "rotate",        rotateValue);
 		SmartDashboard.putNumber(  "Strafe",        strafe);
@@ -269,42 +243,30 @@ public class Robot extends SampleRobot {
 
 	/*SENSOR ACCESSOR METHODS */
 	
-	//method to be used aim in autonomous mode -Keon
+	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
 	public double getDistanceFar(){
 		
-<<<<<<< HEAD
-		double x = ultraSonic.getAverageVoltage();
-		double imani = 20*x*x + 2.56*x + 12.45;
-        SmartDashboard.putNumber("Ahmed ultra", x);
-        SmartDashboard.putNumber("Ahmed imaniUltra", imani);
-    	return imani;
-=======
 		double x = ultraSonicLong.getAverageVoltage();
 		double distanceInInches = 20*x*x + 2.56*x + 12.45;
-		
-        SmartDashboard.putNumber("Distance (Far)", x);
+        SmartDashboard.putNumber("Distance (Far)", distanceInInches);
     	return distanceInInches;
->>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
         
 	}
 	public double getDistanceClose(){
 		
-		double x = ultraSonicShort.getRangeInches();
-		double distanceInInches;
-		 SmartDashboard.putNumber("Distance (Close)", x);
-	    	return x;
+		double y = ultraSonicShort.getRangeInches();
+		distanceFromWall = y;
+		SmartDashboard.putNumber("Distance (Close)", y);
+	    return y;
 	}
 
 	
 	// limitswitch
 	public boolean getGearSwitch(){
-		
 		// if limit switch is touched Hova moves upward
 		if(limitSwitch.get() == true){
-				return true;
-			
-		}
-		else {
+			return true;
+		} else {
 			return false;
 		}
 	}
@@ -320,7 +282,9 @@ public class Robot extends SampleRobot {
         SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
         SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
         SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
-        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll());        
+        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll()); 
+        SmartDashboard.putNumber(   "FusedHeading",         ahrs.getFusedHeading());
+        
         
         /*
         /* Display tilt-corrected, Magnetometer-based heading (requires             
@@ -441,8 +405,6 @@ public class Robot extends SampleRobot {
 		public void findPeg() {
 			pegX = (target1x + target2x ) /2;
 			pegY = (target1y + target2y ) /2;
-			finalPegx = pegX;
-			finalPegy = pegY;
 		}
 		
 		//this method places a gear on a peg -Shivanie H
@@ -482,8 +444,7 @@ public class Robot extends SampleRobot {
 				goForwardAtSpeed(0.3);
 			} else{
 				stopDrive();
-			}
-			
+			}			
 			
 		}		
 	
@@ -491,23 +452,25 @@ public class Robot extends SampleRobot {
 	/*
 		public void aimRobot() { 
 		
-		while(ultraSonicLong.getRangeInches() > distanceFromWall) { //to loop until at acceptable distance (Within Range)
-			int finalPegX = pegX; // Updates the x value of the "Peg"
-			//int finalPegY = pegY;
-			int ultraSonic = distanceFromWall; //Updates distance/Value
-			if(finalPegX < (targetX - range)) { 
+		double targetDistanceFromWall = 14.0;
+		getDistanceClose();
+		int range = 10;
+		
+		while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
+			findPeg(); 						// Updates the x & y values of the "Peg"
+	        getDistanceClose();  			//Updates distance/Value
+			
+			if(pegX < (targetX - range)) { 
 				strafeLeftAtSpeed(0.3);
 			}
-			else if (finalPegX > (targetX + range) {
+			else if (pegX > (targetX + range) {
 				strafeRightAtSpeed(0.3);
 			}else{
 				goForwardAtSpeed(0.3);
 			}
 		}
 		
-	
-
-
-*/
+	 */
+		
 }
 	
