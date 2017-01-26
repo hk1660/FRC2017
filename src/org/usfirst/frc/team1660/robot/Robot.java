@@ -90,7 +90,7 @@ public class Robot extends SampleRobot {
 				 ************************************************************************/
 	            ahrs = new AHRS(SPI.Port.kMXP); 
 	        } catch (RuntimeException ex ) {
-	            DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+	           // DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 	        }
 	}
 	
@@ -184,7 +184,7 @@ public class Robot extends SampleRobot {
 	        //Timer.delay(0.020);		/* wait for one motor update time period (50Hz)     */
 	          
 	        checkJoystick();
-	        checkGyro();
+	        //checkGyro();
 	        getDistanceFar();
 	        getDistanceClose();
 	        
@@ -406,7 +406,9 @@ public class Robot extends SampleRobot {
 	
 	//this method finds the coordinates of the peg -Imani L & Marlahna M
 		public void findPeg() {
-			
+        	if(pipeline.filterContoursOutput().size() > 1){
+        		
+        	}
 	        SmartDashboard.putNumber("Rec1 X", r1.x );
         	SmartDashboard.putNumber("Rec0 X", r0.x );
 			
