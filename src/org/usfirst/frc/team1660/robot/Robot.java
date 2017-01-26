@@ -23,11 +23,10 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
-//import edu.wpi.first.wpilibj.SimpleRobot;
+
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
@@ -42,8 +41,8 @@ public class Robot extends SampleRobot {
 	//SmartDashboard objects
 	SendableChooser startingPosition;
 	SendableChooser strategy;
-	
-	
+	DigitalInput limitSwitch = new DigitalInput(0);
+
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
 	final int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
@@ -58,11 +57,6 @@ public class Robot extends SampleRobot {
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
 
-	
-	
-	
-	
-	
 	//values for coordinates of the peg, the robot sees
 	int target1x;
 	int target1y;
@@ -149,6 +143,7 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
+
 	}
 	
 
@@ -188,6 +183,7 @@ public class Robot extends SampleRobot {
 	          //checkGyro();
 	          getDistanceFar();
 	          getDistanceClose();
+
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
 		
@@ -253,8 +249,38 @@ public class Robot extends SampleRobot {
 
 	/*SENSOR ACCESSOR METHODS */
 	
+	//method to be used aim in autonomous mode -Keon
+	public double getDistanceFar(){
+		
+		double x = ultraSonicLong.getAverageVoltage();
+		double distanceInInches = 20*x*x + 2.56*x + 12.45;
+		
+        SmartDashboard.putNumber("Distance (Far)", x);
+    	return distanceInInches;
+        
+	}
+	public double getDistanceClose(){
+		
+		double x = ultraSonicShort.getRangeInches();
+		double distanceInInches;
+		 SmartDashboard.putNumber("Distance (Close)", x);
+	    	return x;
+	}
+
 	
-	
+	// limitswitch
+	public boolean getGearSwitch(){
+		
+		// if limit switch is touched Hova moves upward
+		if(limitSwitch.get() == true){
+				return true;
+			
+		}
+		else {
+			return false;
+		}
+	}
+
 	public void checkGyro(){
 		boolean zero_yaw_pressed = driverStick.getTrigger();
         if ( zero_yaw_pressed ) {
@@ -266,8 +292,7 @@ public class Robot extends SampleRobot {
         SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
         SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
         SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
-        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll());
-        
+        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll());        
         
         /*
         /* Display tilt-corrected, Magnetometer-based heading (requires             
@@ -435,23 +460,6 @@ public class Robot extends SampleRobot {
 		}		
 	
 	
-	//method to be used aim in autonomous mode -Keon
-		public double getDistanceFar(){
-			
-			double x = ultraSonicLong.getAverageVoltage();
-			double distanceInInches = 20*x*x + 2.56*x + 12.45;
-			
-	        SmartDashboard.putNumber("Distance (Far)", x);
-	    	return distanceInInches;
-	        
-		}
-		public double getDistanceClose(){
-			
-			double x = ultraSonicShort.getRangeInches();
-			double distanceInInches;
-			 SmartDashboard.putNumber("Distance (Close)", x);
-		    	return x;
-		}
 	/*
 		public void aimRobot() { 
 		
