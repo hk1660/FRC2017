@@ -23,22 +23,36 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
+<<<<<<< HEAD
 
+=======
+import edu.wpi.first.wpilibj.DigitalOutput;
+>>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
 
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
-	AnalogInput ultraSonic = new AnalogInput(0);
+	AnalogInput ultraSonicLong = new AnalogInput(0);
+	DigitalOutput output = new DigitalOutput(8);
+	DigitalInput input = new DigitalInput (9);
+	Ultrasonic ultraSonicShort = new Ultrasonic(output,input);
 	NetworkTable table;
 	private  VisionThread visionThread;
 	
 	//SmartDashboard objects
 	SendableChooser startingPosition;
+<<<<<<< HEAD
 	SendableChooser strategy;
 	DigitalInput limitSwitch = new DigitalInput(0);
 	
+=======
+	SendableChooser strategy;
+	DigitalInput limitSwitch = new DigitalInput(0);
+
+>>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
 	final int TURNSIDEWAYS_AXIS = 4; //Right joystick side to side
@@ -52,7 +66,11 @@ public class Robot extends SampleRobot {
 	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
+<<<<<<< HEAD
 	
+=======
+
+>>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
 	//values for coordinates of the peg, the robot sees
 	int target1x;
 	int target1y;
@@ -141,7 +159,11 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
+<<<<<<< HEAD
 		//limitSwitch.addobject(limt)
+=======
+
+>>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
 	}
 	
 
@@ -179,8 +201,9 @@ public class Robot extends SampleRobot {
 	          
 	          checkJoystick();
 	          //checkGyro();
-	          getDistance();
-			
+	          getDistanceFar();
+	          getDistanceClose();
+
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
 		
@@ -246,16 +269,46 @@ public class Robot extends SampleRobot {
 
 	/*SENSOR ACCESSOR METHODS */
 	
-	public double getDistance(){
+	//method to be used aim in autonomous mode -Keon
+	public double getDistanceFar(){
 		
+<<<<<<< HEAD
 		double x = ultraSonic.getAverageVoltage();
 		double imani = 20*x*x + 2.56*x + 12.45;
         SmartDashboard.putNumber("Ahmed ultra", x);
         SmartDashboard.putNumber("Ahmed imaniUltra", imani);
     	return imani;
+=======
+		double x = ultraSonicLong.getAverageVoltage();
+		double distanceInInches = 20*x*x + 2.56*x + 12.45;
+		
+        SmartDashboard.putNumber("Distance (Far)", x);
+    	return distanceInInches;
+>>>>>>> branch 'master' of https://github.com/hk1660/FRC2017.git
         
 	}
+	public double getDistanceClose(){
+		
+		double x = ultraSonicShort.getRangeInches();
+		double distanceInInches;
+		 SmartDashboard.putNumber("Distance (Close)", x);
+	    	return x;
+	}
+
 	
+	// limitswitch
+	public boolean getGearSwitch(){
+		
+		// if limit switch is touched Hova moves upward
+		if(limitSwitch.get() == true){
+				return true;
+			
+		}
+		else {
+			return false;
+		}
+	}
+
 	public void checkGyro(){
 		boolean zero_yaw_pressed = driverStick.getTrigger();
         if ( zero_yaw_pressed ) {
@@ -267,8 +320,7 @@ public class Robot extends SampleRobot {
         SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
         SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
         SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
-        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll());
-        
+        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll());        
         
         /*
         /* Display tilt-corrected, Magnetometer-based heading (requires             
@@ -435,11 +487,11 @@ public class Robot extends SampleRobot {
 			
 		}		
 	
+	
 	/*
-	//method to be used aim in autonomous mode -Keon
-	public void aimRobot() { 
+		public void aimRobot() { 
 		
-		while(ultraSonic.getRangeInches() > distanceFromWall) { //to loop until at acceptable distance (Within Range)
+		while(ultraSonicLong.getRangeInches() > distanceFromWall) { //to loop until at acceptable distance (Within Range)
 			int finalPegX = pegX; // Updates the x value of the "Peg"
 			//int finalPegY = pegY;
 			int ultraSonic = distanceFromWall; //Updates distance/Value
@@ -453,9 +505,9 @@ public class Robot extends SampleRobot {
 			}
 		}
 		
-	*/	
+	
 
 
-
+*/
 }
 	
