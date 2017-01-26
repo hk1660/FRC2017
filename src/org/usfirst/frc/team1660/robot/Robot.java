@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj.vision.VisionRunner;
 import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilijbj.SimpleRobot;
+
 
 
 public class Robot extends SampleRobot {
@@ -37,7 +37,7 @@ public class Robot extends SampleRobot {
 	//SmartDashboard objects
 	SendableChooser startingPosition;
 	SendableChooser strategy;
-	limitSwitch = new DigitalInput(0);
+	DigitalInput limitSwitch = new DigitalInput(0);
 	
   //DECLARING JOYSTICK VARIABLES   -jamesey
 	final int FORWARDBACKWARD_AXIS = 1; //Left joystick up and down
@@ -52,30 +52,6 @@ public class Robot extends SampleRobot {
 	
 	// The channel on the driver station that the joystick is connected to
 	final int kJoystickChannel = 0;
-
-	// limitswitch
-	public Hova(){
-		
-		// if limit switch is touched Hova moves upward
-		if(limitSwitch.get().equals(1)){
-	
-			
-			// hova moves up
-			
-		}
-		else {
-			
-		}
-		
-		
-		
-		
-		
-		
-	}
-	
-	
-	
 	
 	//values for coordinates of the peg, the robot sees
 	int target1x;
@@ -140,7 +116,9 @@ public class Robot extends SampleRobot {
 	    visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 	        if (!pipeline.filterContoursOutput().isEmpty()) {
 	  
-	            System.out.println(pipeline.filterContoursOutput().get(0));
+	        	Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput ().get(0));
+	        	SmartDashboard.putString("CamRec X", r.x );
+	            //System.out.println(pipeline.filterContoursOutput().get(0));
 	            //SmartDashboard.putNumber("opencv",pipeline.filterContoursOutput().get(0));
 	            table = NetworkTable.getTable("GRIP/marly");
 	        
@@ -163,7 +141,7 @@ public class Robot extends SampleRobot {
         strategy.addDefault("Move forward only", new Integer(1));
  
         SmartDashboard.putData("strategy selector", strategy);
-		limitSwitch.addobject(limt)
+		//limitSwitch.addobject(limt)
 	}
 	
 
@@ -271,7 +249,7 @@ public class Robot extends SampleRobot {
 	public double getDistance(){
 		
 		double x = ultraSonic.getAverageVoltage();
-		double imani = 20*x*x + 2.56*x + 1m2.45;
+		double imani = 20*x*x + 2.56*x + 12.45;
         SmartDashboard.putNumber("Ahmed ultra", x);
         SmartDashboard.putNumber("Ahmed imaniUltra", imani);
     	return imani;
