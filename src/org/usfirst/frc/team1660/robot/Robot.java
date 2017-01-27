@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.SensorBase;
+import edu.wpi.first.wpilibj.Relay;
 
 public class Robot extends SampleRobot {
 	AHRS ahrs;
@@ -37,7 +39,7 @@ public class Robot extends SampleRobot {
 	DigitalInput input = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(output,input);
 	DigitalInput limitSwitch = new DigitalInput(0);
-	
+	Relay hovaRelay = new Relay(7);
 	NetworkTable table;
 	private  VisionThread visionThread;
 	
@@ -164,14 +166,26 @@ public class Robot extends SampleRobot {
 			 double timerA = timerAuto.get();
 			 SmartDashboard.putNumber("match time",timerA);
 		//	   if(currentStrategy == 1) {
-			    	runAutoStrategy_GoForwardOnly(timerAuto); 
+			  	runAutoStrategy_GoForwardOnly(timerAuto); 
+			// runAutoStrategy_PlaceGearLeftPeg(timerAuto);
 			//     }  
 		 
 		 }
 
 	
 	}
-
+/*	public void positionGear(){
+		
+		if(ButtonY == 1){
+		hovaRelay.setDirection(kForwardOnly); 	
+		}else {
+			hovaRelay.setDirection(kBackwardOnly);
+		}
+		
+		
+		
+	}
+*/
 
 	public void operatorControl() {
 		System.out.println("operatorControl");
@@ -188,7 +202,7 @@ public class Robot extends SampleRobot {
 	        getDistanceFar();
 	        getDistanceClose();
 	        
-	        findPeg();
+	 //       findPeg();
 
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
@@ -231,7 +245,7 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber(  "rotate",        rotateValue);
 		SmartDashboard.putNumber(  "Strafe",        strafe);
 		SmartDashboard.putNumber("angle", ahrs.getAngle() );
-		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0); //imu.getYaw()
+		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue,0); //imu.getYaw()
 		
 	}
 
@@ -245,7 +259,7 @@ public class Robot extends SampleRobot {
       }
 
 	/*SENSOR ACCESSOR METHODS */
-	
+	 
 	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
 	public double getDistanceFar(){
 		
@@ -256,7 +270,7 @@ public class Robot extends SampleRobot {
         
 	}
 	public double getDistanceClose(){
-		
+		ultraSonicShort.setAutomaticMode(true);
 		double y = ultraSonicShort.getRangeInches();
 		distanceFromWall = y;
 		SmartDashboard.putNumber("Distance (Close)", y);
@@ -405,7 +419,7 @@ public class Robot extends SampleRobot {
 	}
 	
 	//this method finds the coordinates of the peg -Imani L & Marlahna M
-		public void findPeg() {
+	/*	public void findPeg() {
         	if(pipeline.filterContoursOutput().size() > 1){
         		
         	}
@@ -425,7 +439,7 @@ public class Robot extends SampleRobot {
 			
 			
 		}
-		
+		*/
 		//this method places a gear on a peg -Shivanie H
 		public void placePeg() {
 		
