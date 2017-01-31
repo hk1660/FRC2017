@@ -373,9 +373,9 @@ public class Robot extends SampleRobot {
 		
 		public void directionCompressor(){
 			this.compressorRelay.set(Relay.Value.kForward);
-			smartDashboard.putString("compressorStatus", "is on");
-			this.compressorRelay.set(Relay.value.kOff);
-			smartDashboard.putString("compressorStatus", "is off")
+			SmartDashboard.putString("compressorStatus", "is on");
+			this.compressorRelay.set(Relay.Value.kOff);
+			SmartDashboard.putString("compressorStatus", "is off");
 		}
 		
 		/* basic climb method	*/
