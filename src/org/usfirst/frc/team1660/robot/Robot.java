@@ -46,6 +46,7 @@ public class Robot extends SampleRobot {
 	CANTalon rearLeft = new CANTalon(2);
 	CANTalon frontRight = new CANTalon(4);
 	CANTalon rearRight = new CANTalon(3);
+	CANTalon climber =new CANTalon(5);
 	
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(5);
@@ -89,6 +90,7 @@ public class Robot extends SampleRobot {
 	final int POV_RIGHT = 90;
 	
 	Joystick driverStick = new Joystick(0);
+	Joystick manipStick = new Joystick(1);
 	final int FORWARDBACKWARD_AXIS = LEFT_Y_AXIS; //Left joystick up and down
 	final int TURNSIDEWAYS_AXIS = RIGHT_X_AXIS; //Right joystick side to side
 	final int STRAFE_AXIS = LEFT_X_AXIS; //Left joystick side to side
@@ -264,7 +266,7 @@ public class Robot extends SampleRobot {
         }
       }
 
-	/* Joystick Method to rotate the Gears up from ground in positino to score	-Jamesey	*/
+	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkGearRotation(){
 		
 		if(driverStick.getRawButton(Y_BUTTON) == true){
@@ -282,10 +284,7 @@ public class Robot extends SampleRobot {
 		
 		
 	}
-	
-	/* Joystick method to rotate hova up & down	*/
-	
-	
+		
 	
 	
 	/* Joystick method to eat and spit gears on ground	*/
@@ -424,6 +423,7 @@ public class Robot extends SampleRobot {
 		
 		/* basic gear grabbing methods	-Jamesey	*/
 		public void holdGear(){
+			
 			this.hovaRelay.set(Relay.Value.kForward);
 		}
 		public void dropGear(){
@@ -433,10 +433,24 @@ public class Robot extends SampleRobot {
 		/* basic compressor functionality method	*/
 		
 		
-		
+		public void directionCompressor(){
+			this.compressorRelay.set(Relay.Value.kForward);
+			smartDashboard.putString("compressorStatus", "is on");
+			this.compressorRelay.set(Relay.value.kOff);
+			smartDashboard.putString("compressorStatus", "is off")
+		}
 		
 		/* basic climb method	*/
 
+	public void climbUp(){
+		this.climber.set(1.0);
+	}
+	public void climbDown(){
+		this.climber.set(-1.0);
+	}
+	public void dontClimb(){
+		this.climber.set(0.0);
+	}
 	
 		
 		
