@@ -8,7 +8,7 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
-import org.usfirst.frc.team1660.robot.GripPipeline;
+
 import org.usfirst.frc.team1660.robot.HKdrive;
 import org.usfirst.frc.team1660.robot.HKcam;
 import edu.wpi.first.wpilibj.Joystick;
@@ -24,8 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.vision.VisionRunner;
-import edu.wpi.first.wpilibj.vision.VisionThread;
+
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -42,14 +41,15 @@ public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	HKcam hkcam;
 	
+	
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
 	CANTalon frontRight = new CANTalon(4);
 	CANTalon rearRight = new CANTalon(3);
 	
 	Relay compressorRelay = new Relay(0);
-	Relay hockeyRelay = new Relay(5);
-	Relay hovaRelay = new Relay(7);
+	Relay hockeyRelay = new Relay(1);
+	Relay hovaRelay = new Relay(2);
 		
 	AnalogInput ultraSonicLong = new AnalogInput(0);
 	DigitalOutput trigger = new DigitalOutput(8);
@@ -57,9 +57,6 @@ public class Robot extends SampleRobot {
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput limitSwitch = new DigitalInput(0);
 		
-	//NetworkTable table;
-	private  VisionThread visionThread;
-	GripPipeline pipeline;
 	
 	/* SmartDashboard objects  */
 	SendableChooser startingPosition;
@@ -102,8 +99,6 @@ public class Robot extends SampleRobot {
 	int pegX;
 	int pegY;
 	double distanceFromWall = -2.0;
-	Rect r0;
-	Rect r1;
 
 	
 	/* ----------	REQUIRED METHODS	--------------------------------------------------------------------------*/
@@ -124,44 +119,9 @@ public class Robot extends SampleRobot {
 	
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
-
-		//NetworkTable.setIPAddress("10.16.60.63");
-		//table = NetworkTable.getTable("marly");
-		
-		/* Creates UsbCamera and MjpegServer [1] and connects them */
-		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-		
-		/* Creates the CvSource and MjpegServer [2] and connects them	*/ 
-		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
-		
-		/* Creates the CvSink and connects it to the UsbCamera */
-		CvSink cvSink = CameraServer.getInstance().getVideo();
-		
-		//pipeline.process(camera);
-		
-	    visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
-	        if (!pipeline.filterContoursOutput().isEmpty()) {
-	  
-	        	Rect r0 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
-	        	SmartDashboard.putNumber("Rec0 X", r0.x );
-	        	
-	        	if(pipeline.filterContoursOutput().size() > 1){
-		        	Rect r1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
-		        	SmartDashboard.putNumber("Rec1 X", r1.x );
-	        	}
-	           
-	        	
-	        	//System.out.println(pipeline.filterContoursOutput().get(0));
-	            //SmartDashboard.putNumber("opencv",pipeline.filterContoursOutput().get(0));
-	            //table = NetworkTable.getTable("GRIP/marly");
-	        
-	            //double[] def = new double[0];
-	            //double[] areas = table.getNumberArray("width", def);
-	            //System.out.println(areas[0]);
-	        }
-	    });
-	    visionThread.start();
-
+		hkcam = new HKcam();
+		hkcam.camInit();
+	    
 
 		//CHOOSING AUTO MODE
 	    startingPosition = new SendableChooser();
@@ -381,29 +341,7 @@ public class Robot extends SampleRobot {
 	}
 	
 	//this method finds the coordinates of the peg -Imani L & Marlahna M
-		public void findPeg() {
-        	if(pipeline.filterContoursOutput().size() > 1){ //make sure we see 2 targets
-        		
-		        SmartDashboard.putNumber("Rec1 X", r1.x );
-	        	SmartDashboard.putNumber("Rec0 X", r0.x );
-				
-	        	target1x = r0.x + r0.width/2;
-	        	target1y = r0.y + r0.height/2;
-	        	target2x = r1.x + r1.width/2;
-	        	target2y = r1.y + r1.height/2;
-	        	
-				pegX = (target1x + target2x ) /2;
-				pegY = (target1y + target2y ) /2;
-				
-				SmartDashboard.putNumber("pegX", pegX);
-				SmartDashboard.putNumber("pegY", pegY);
-				
-        	} else {
-        		SmartDashboard.putString("pegX", "unknown");
-    			SmartDashboard.putString("pegY", "unknown");
-        	}
-		}
-		
+	
 		/* method to get the value from a Pneumatic pressure switch	*/
 		
 		
@@ -439,7 +377,7 @@ public class Robot extends SampleRobot {
 
 	
 		
-		
+	
 		
 		
 		
@@ -469,6 +407,33 @@ public class Robot extends SampleRobot {
 				goForwardAtSpeed(0.3);
 			}
 		}
+	}
+	
+	public void findPeg() {
+		Rect r0 = hkcam.getRect0();
+		Rect r1 = hkcam.getRect1();
+		
+		
+    	if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
+    		
+	        SmartDashboard.putNumber("Rec1 X", r1.x );
+        	SmartDashboard.putNumber("Rec0 X", r0.x );
+			
+        	target1x = r0.x + r0.width/2;
+        	target1y = r0.y + r0.height/2;
+        	target2x = r1.x + r1.width/2;
+        	target2y = r1.y + r1.height/2;
+        	
+			pegX = (target1x + target2x ) /2;
+			pegY = (target1y + target2y ) /2;
+			
+			SmartDashboard.putNumber("pegX", pegX);
+			SmartDashboard.putNumber("pegY", pegY);
+			
+    	} else {
+    		SmartDashboard.putString("pegX", "unknown");
+			SmartDashboard.putString("pegY", "unknown");
+    	}
 	}
 
 	
