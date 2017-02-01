@@ -47,8 +47,8 @@ public class Robot extends SampleRobot {
 	CANTalon frontRight = new CANTalon(4);
 	CANTalon rearRight = new CANTalon(3);
 	CANTalon climber =new CANTalon(5);
-	CANTalon miniGear1 = new CANTalon(6);
-	CANTalon miniGear2 = new CANTalon(7);
+	CANTalon miniGearFRight = new CANTalon(6);
+	CANTalon miniGearFLeft = new CANTalon(7);
 	
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(1);
@@ -254,15 +254,15 @@ public class Robot extends SampleRobot {
 	public void mingear()
 	{
 		
-	if(manipStick.getRawButton(Y_BUTTON)==true){
-	  miniGear1.set(1.0);
-	  miniGear2.set(-1.0);
+	if(manipStick.getRawButton(A_BUTTON)==true){
+	  miniGearFRight.set(1.0);
+	  miniGearFLeft.set(-1.0);
 	}
 	
-	else if (manipStick.getRawButton(X_BUTTON)== true){
+	else if (manipStick.getRawButton(B_BUTTON)== true){
 	
-	  miniGear1.set(-1.0);
-	  miniGear2.set(1.0);
+	  miniGearFRight.set(-1.0);
+	  miniGearFLeft.set(1.0);
 	
 	}
 	}
