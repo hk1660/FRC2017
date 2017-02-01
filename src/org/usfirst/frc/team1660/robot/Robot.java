@@ -47,6 +47,8 @@ public class Robot extends SampleRobot {
 	CANTalon frontRight = new CANTalon(4);
 	CANTalon rearRight = new CANTalon(3);
 	CANTalon climber =new CANTalon(5);
+	CANTalon minGear1 = new CANTalon(6);
+	CANTalon miniGear2 = new CANTalon(7);
 	
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(5);
@@ -161,7 +163,7 @@ public class Robot extends SampleRobot {
 	            //double[] areas = table.getNumberArray("width", def);
 	            //System.out.println(areas[0]);
 	        }
-	    });
+	    }
 	    visionThread.start();
 
 
@@ -289,8 +291,21 @@ public class Robot extends SampleRobot {
 	
 	/* Joystick method to eat and spit gears on ground	*/
 	
+	public void mingear()
+	{
+		
+	if(manipStick.getRawButton(Y_BUTTON)==true)){
+	miniGear1.set(1.0);
+	miniGear2.set(-1.0);
+	}
 	
+	else if (manipStick.getRawButton(X_BUTTON)== true){
 	
+	miniGear1.set(-1.0);
+	miniGear2.set(1.0);
+	
+	}
+	}
 	
 	/* Joystick method to climb the rope	*/
 	
