@@ -242,7 +242,13 @@ public class Robot extends SampleRobot {
 	/* Joystick method to grab and ungrab the gears with the hockey-stick shaped claw */
 	public void checkGearGrip(){
 		
-		
+		if(driverStick.getRawButton(LB_BUTTON) == true){
+			holdGear();
+			
+	}
+		if(driverStick.getRawButton(RB_BUTTON) == true){
+			dropGear();
+		}
 		
 		
 	}
@@ -251,7 +257,7 @@ public class Robot extends SampleRobot {
 	
 	/* Joystick method to eat and spit gears on ground	*/
 	
-	public void mingear()
+	public void minigear()
 	{
 		
 	if(manipStick.getRawButton(A_BUTTON)==true){
@@ -268,7 +274,19 @@ public class Robot extends SampleRobot {
 	}
 	
 	/* Joystick method to climb the rope	*/
+	public void climbUpRope(){
+	if(manipStick.getRawAxis(LT_AXIS)>.5){
+		climbUp();
+	}
+	}
+		
+	public void climbDownRope(){
+	if(manipStick.getRawAxis(RT_AXIS)>.5){
+			climbDown();
+		
+	}
 	
+	}
 	
 	
 	
@@ -282,7 +300,20 @@ public class Robot extends SampleRobot {
 
 	
 
+	/*turn compressor on or off*/
+	public void compressorOn(){
+		
+		if(driverStick.getRawButton(POV_DOWN) == true){
+		
+			this.compressorRelay.set(Relay.Value.kForward);
+			SmartDashboard.putString("compressorStatus", "is on");
 	
+		}
+		else if(driverStick.getRawButton(POV_DOWN) = true){
+			this.compressorRelay.set(Relay.Value.kReverse);
+			SmartDashboard.putString("compressorStatus", "is off");
+			
+		}
 	
 	
 	
