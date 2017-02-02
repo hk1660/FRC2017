@@ -1,30 +1,20 @@
 package org.usfirst.frc.team1660.robot;
 
 /* ----------	IMPORTED LIBRARIES & CLASSES	--------------------------------------------------------------------------*/
-
-import org.opencv.imgproc.Imgproc;
-import org.opencv.core.Rect;
-import edu.wpi.cscore.CvSource;
-import edu.wpi.cscore.CvSink;
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.CameraServer;
-
 import org.usfirst.frc.team1660.robot.HKdrive;
 import org.usfirst.frc.team1660.robot.HKcam;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
-
+import org.opencv.core.Rect;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -34,14 +24,13 @@ import edu.wpi.first.wpilibj.Relay;
 
 
 public class Robot extends SampleRobot {
-	
+
 	/* ----------	Robot VARIABLES/FIELDS	--------------------------------------------------------------------------*/
-	
+
 	AHRS ahrs;
 	HKdrive robotDrive;
 	HKcam hkcam;
-	
-	
+
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
 	CANTalon frontRight = new CANTalon(4);
@@ -49,22 +38,22 @@ public class Robot extends SampleRobot {
 	CANTalon climber =new CANTalon(5);
 	CANTalon miniGearFRight = new CANTalon(6);
 	CANTalon miniGearFLeft = new CANTalon(7);
-	
+
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(1);
 	Relay hovaRelay = new Relay(2);
-		
+
 	AnalogInput ultraSonicLong = new AnalogInput(0);
 	DigitalOutput trigger = new DigitalOutput(8);
 	DigitalInput echo = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput limitSwitch = new DigitalInput(0);
-		
-	
+
+
 	/* SmartDashboard objects  */
 	SendableChooser startingPosition;
 	SendableChooser strategy;
-	
+
 
 	/* Xbox controllers Setup -Jamesey	*/
 	final int A_BUTTON = 1;
@@ -87,15 +76,17 @@ public class Robot extends SampleRobot {
 	final int POV_LEFT = 270;
 	final int POV_DOWN = 180;
 	final int POV_RIGHT = 90;
-	
+
 	Joystick driverStick = new Joystick(0);
 	Joystick manipStick = new Joystick(1);
 	final int FORWARDBACKWARD_AXIS = LEFT_Y_AXIS; //Left joystick up and down
 	final int TURNSIDEWAYS_AXIS = RIGHT_X_AXIS; //Right joystick side to side
 	final int STRAFE_AXIS = LEFT_X_AXIS; //Left joystick side to side
-	
+
 
 	/*Lift peg coordinates that the robot sees	*/
+	Rect r0 = new Rect();
+	Rect r1 = new Rect();
 	int target1x;
 	int target1y;
 	int target2x;
@@ -104,102 +95,106 @@ public class Robot extends SampleRobot {
 	int pegY;
 	double distanceFromWall = -2.0;
 
-	
+
 	/* ----------	REQUIRED METHODS	--------------------------------------------------------------------------*/
 	/* Robot(), robotInit(), autonomous(), and operatorControl()	*/
 
 	public Robot() {
-		
+
 		robotDrive = new HKdrive(frontLeft, rearLeft, frontRight, rearRight);
 		robotDrive.setExpiration(0.1);
-		
+
 		try {
-            ahrs = new AHRS(SPI.Port.kMXP); //navX-MXP initialized with (SPI, I2C, TTL UART) and USB //http://navx-mxp.kauailabs.com/guidance/selecting-an-interface.
-        } catch (RuntimeException ex ) {
-        	DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
-        }
-		
+			ahrs = new AHRS(SPI.Port.kMXP); //navX-MXP initialized with (SPI, I2C, TTL UART) and USB //http://navx-mxp.kauailabs.com/guidance/selecting-an-interface.
+		} catch (RuntimeException ex ) {
+			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
+		}
+
 	}
-	
+
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
 
-		hkcam = new HKcam();
-		hkcam.camInit();
+		//hkcam = new HKcam();
+		//hkcam.camInit();
 
 		//CHOOSING AUTO MODE
-	    startingPosition = new SendableChooser();
-        startingPosition.addDefault("Left", new Integer(1));
-        startingPosition.addObject("Middle", new Integer(2));
-        startingPosition.addObject("Right", new Integer(3));
-        SmartDashboard.putData("startingPosition", startingPosition);
-        
-        strategy = new SendableChooser();
-        strategy.addDefault("Move forward only", new Integer(1));
- 
-        SmartDashboard.putData("strategy selector", strategy);
+		startingPosition = new SendableChooser();
+		startingPosition.addDefault("Left", new Integer(1));
+		startingPosition.addObject("Middle", new Integer(2));
+		startingPosition.addObject("Right", new Integer(3));
+		SmartDashboard.putData("startingPosition", startingPosition);
+
+		strategy = new SendableChooser();
+		strategy.addDefault("Move forward only", new Integer(1));
+
+		SmartDashboard.putData("strategy selector", strategy);
 
 	}
-	
+
 
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
-		   
-		 Timer timerAuto = new Timer();
-		 timerAuto.start(); 
-	//	 int currentStrategy = (int) strategy.getSelected(); 
-		 while(isAutonomous() && isEnabled()){ 
-        	
-			 double timerA = timerAuto.get();
-			 SmartDashboard.putNumber("match time",timerA);
-		//	   if(currentStrategy == 1) {
-			  	runAutoStrategy_GoForwardOnly(timerAuto); 
+
+		Timer timerAuto = new Timer();
+		timerAuto.start(); 
+		//	 int currentStrategy = (int) strategy.getSelected(); 
+		while(isAutonomous() && isEnabled()){ 
+
+			double timerA = timerAuto.get();
+			SmartDashboard.putNumber("match time",timerA);
+			//	   if(currentStrategy == 1) {
+			runAutoStrategy_GoForwardOnly(timerAuto); 
 			// runAutoStrategy_PlaceGearLeftPeg(timerAuto);
 			//     }  
-		 
-		 }
+
+		}
 
 	}
 
-	
+
 	public void operatorControl() {
 		//System.out.println("operatorControl");
 		robotDrive.setSafetyEnabled(true);
-		
+
 		while (isOperatorControl() && isEnabled()) {
-	          
-	        checkDriving();
-	        //checkGyro();
-	        
-	        checkGotGear();
-	        checkGearRotation();
-	        checkGearGrip();
-	        
-	        //findPeg();
-	        getDistanceFar();
-	        getDistanceClose();
-	        //placePeg();
-	        
+
+			checkDriving();
+			//getGyro();
+			
+			checkMiniGears();
+			isGear();
+			checkGearGrip();
+			checkGearRotation();
+			checkCompressor();
+			
+			checkClimbRope();
+			
+			//getPegCoordinates();
+			getDistanceFar();
+			getDistanceClose();
+			//placePeg();
+
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
-		
+
 		}
 	}
-	
-	
+
+
 	/* ----------	OPERATOR CONTROL METHODS	--------------------------------------------------------------------------*/
-	
+
 	/* Mecanum Driving with XBox 360 Joysticks -Malachi P	*/
 	public void checkDriving()
 	{
-		
-		 double threshold = 0.11;
-		 double strafe = squareInput(driverStick.getRawAxis(STRAFE_AXIS)) ; // right and left on the left thumb stick?
-		 double moveValue = squareInput(driverStick.getRawAxis(FORWARDBACKWARD_AXIS));// up and down on left thumb stick?
-		 double rotateValue = squareInput(driverStick.getRawAxis(TURNSIDEWAYS_AXIS));// right and left on right thumb stick
-		 double angle = ahrs.getAngle();
-		 
-		 //Kill Ghost motors -Matthew M
+
+		double threshold = 0.11;
+		double strafe = squareInput(driverStick.getRawAxis(STRAFE_AXIS)) ; // right and left on the left thumb stick?
+		double moveValue = squareInput(driverStick.getRawAxis(FORWARDBACKWARD_AXIS));// up and down on left thumb stick?
+		double rotateValue = squareInput(driverStick.getRawAxis(TURNSIDEWAYS_AXIS));// right and left on right thumb stick
+		double angle = ahrs.getAngle();
+
+		//Kill Ghost motors -Matthew M
 		if(moveValue > threshold*-1 && moveValue < threshold) {
 			moveValue = 0;
 		}
@@ -209,28 +204,39 @@ public class Robot extends SampleRobot {
 		if(strafe > threshold*-1 && strafe < threshold) {
 			strafe = 0;
 		}
-		
+
 		//MECANUM -Malachi P
 		SmartDashboard.putNumber("move",	moveValue);
 		SmartDashboard.putNumber("rotate",	rotateValue);
 		SmartDashboard.putNumber("strafe",	strafe);
 		SmartDashboard.putNumber("angle",	angle);
 		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
-		
+
 	}
 
 	public double squareInput(double x) {
-        if(x > 0 ) {
-      	return Math.pow(x, 4);
-        }
-        else{
-      	  return -1*Math.pow(x, 4); 
-        }
-      }
+		if(x > 0 ) {
+			return Math.pow(x, 4);
+		}
+		else{
+			return -1*Math.pow(x, 4); 
+		}
+	}
+	
+	/* Joystick method to eat and spit gears on ground	*/
+	public void checkMiniGears() {
+		if(manipStick.getRawButton(A_BUTTON)==true){
+			miniGearFRight.set(1.0);
+			miniGearFLeft.set(-1.0);
+		}
+		else if (manipStick.getRawButton(B_BUTTON)== true){
+			miniGearFRight.set(-1.0);
+			miniGearFLeft.set(1.0);
+		}
+	}
 
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkGearRotation(){
-		
 		if(driverStick.getRawButton(Y_BUTTON) == true){
 			rotateUp();
 		}
@@ -238,165 +244,151 @@ public class Robot extends SampleRobot {
 			rotateDown();
 		}
 	}
-	
+
 	/* Joystick method to grab and ungrab the gears with the hockey-stick shaped claw */
 	public void checkGearGrip(){
-		
 		if(driverStick.getRawButton(LB_BUTTON) == true){
 			holdGear();
-			
-	}
+		}
 		if(driverStick.getRawButton(RB_BUTTON) == true){
 			dropGear();
 		}
-		
-		
 	}
-		
-	
-	
-	/* Joystick method to eat and spit gears on ground	*/
-	
-	public void minigear()
-	{
-		
-	if(manipStick.getRawButton(A_BUTTON)==true){
-	  miniGearFRight.set(1.0);
-	  miniGearFLeft.set(-1.0);
-	}
-	
-	else if (manipStick.getRawButton(B_BUTTON)== true){
-	
-	  miniGearFRight.set(-1.0);
-	  miniGearFLeft.set(1.0);
-	
-	}
-	}
-	
+
 	/* Joystick method to climb the rope	*/
-	public void climbUpRope(){
-	if(manipStick.getRawAxis(LT_AXIS)>.5){
-		climbUp();
-	}
-	}
-		
-	public void climbDownRope(){
-	if(manipStick.getRawAxis(RT_AXIS)>.5){
-			climbDown();
-		
-	}
-	
-	}
-	
-	
-	
-	
-	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
-	
-	
-	
-	
-	/* Joystick Combo method to place a gear on a peg automatically	*/
-
-	
-
-	/*turn compressor on or off*/
-	public void compressorOn(){
-		
-		if(driverStick.getRawButton(POV_DOWN) == true){
-		
-			this.compressorRelay.set(Relay.Value.kForward);
-			SmartDashboard.putString("compressorStatus", "is on");
-	
+	public void checkClimbRope(){
+		if(manipStick.getRawAxis(LT_AXIS)>.5){
+			climbUp();
 		}
-		else if(driverStick.getRawButton(POV_DOWN) = true){
-			this.compressorRelay.set(Relay.Value.kReverse);
-			SmartDashboard.putString("compressorStatus", "is off");
+		if(manipStick.getRawAxis(RT_AXIS)>.5){
+			climbDown();
+		}
+	}
+	
+	/*	method to turn compressor on or off	-???	*/
+	public void checkCompressor(){
+
+		if(driverStick.getPOV() == POV_DOWN){
 			
 		}
-	
-	
-	
-	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
-	 
-	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
-	public double getDistanceFar(){
+	}
+	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
+
+
+
+
+	/* Joystick Combo method to place a gear on a peg automatically	*/
+
+
+
+
+
+		/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
+
+		//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
+		public double getDistanceFar(){
+
+			double x = ultraSonicLong.getAverageVoltage();
+			double distanceInInches = 20*x*x + 2.56*x + 12.45;
+			SmartDashboard.putNumber("Distance (Far)", distanceInInches);
+			return distanceInInches;
+
+		}
+		public double getDistanceClose(){
+			ultraSonicShort.setAutomaticMode(true);
+			double y = ultraSonicShort.getRangeInches();
+			distanceFromWall = y;
+			SmartDashboard.putNumber("Distance (Close)", y);
+			return y;
+		}
+
+		// limitswitch to check if we have a gear, then used to move Hova up
+		public boolean isGear(){
+			boolean gotGear = limitSwitch.get();
+			SmartDashboard.putBoolean("gotGear?", gotGear);
+			return gotGear;
+		}
 		
-		double x = ultraSonicLong.getAverageVoltage();
-		double distanceInInches = 20*x*x + 2.56*x + 12.45;
-        SmartDashboard.putNumber("Distance (Far)", distanceInInches);
-    	return distanceInInches;
-        
-	}
-	public double getDistanceClose(){
-		ultraSonicShort.setAutomaticMode(true);
-		double y = ultraSonicShort.getRangeInches();
-		distanceFromWall = y;
-		SmartDashboard.putNumber("Distance (Close)", y);
-	    return y;
-	}
+		/*	this method finds the coordinates of the peg -Imani L & Marlahna M	*/
+		public void getPegCoordinates() {
 
-	
-	// limitswitch to check if we have a gear, then used to move Hova up
-	public boolean checkGotGear(){
-		boolean gotGear = limitSwitch.get();
-		SmartDashboard.putBoolean("gotGear?", gotGear);
-		return gotGear;
-	}
+			r0 = hkcam.getRect0();
+			r1 = hkcam.getRect1();
 
-	public void checkGyro(){
+			if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
 
-		//Zero the gyro/yaw of the navX
-        if (driverStick.getRawAxis(LT_AXIS) > 0.5) {
-            ahrs.zeroYaw();
-        }
+				SmartDashboard.putNumber("Rec1 X", r1.x );
+				SmartDashboard.putNumber("Rec0 X", r0.x );
 
-        /* Display 6-axis Processed Angle Data                                      */
-        SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
-        SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
-        SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
-        SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
-        SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll()); 
-           
-        // Display tilt-corrected, Magnetometer-based heading (requires magnetometer calibration to be useful)                                   
-        //SmartDashboard.putNumber(   "IMU_CompassHeading",   ahrs.getCompassHeading());
-        
-        // Display 9-axis Heading (requires magnetometer calibration to be useful)  
-        //SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+				target1x = r0.x + r0.width/2;
+				target1y = r0.y + r0.height/2;
+				target2x = r1.x + r1.width/2;
+				target2y = r1.y + r1.height/2;
 
-        // These functions are compatible w/the WPI Gyro Class, providing a simple path for upgrading from the Kit-of-Parts gyro to the navx-MXP            
-        SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle());
-        SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
+				pegX = (target1x + target2x ) /2;
+				pegY = (target1y + target2y ) /2;
 
-        // Display Processed Acceleration Data (Linear Acceleration, Motion Detect)        
-        //SmartDashboard.putNumber(   "IMU_Accel_X",          ahrs.getWorldLinearAccelX());
-        //SmartDashboard.putNumber(   "IMU_Accel_Y",          ahrs.getWorldLinearAccelY());
-        //SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-        //SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
-        
-        // Omnimount Yaw Axis Information                                           
-        // For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  
-        //AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
-        //SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
-        //SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
-        
-        // Sensor Board Information                                                 
-        SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
+				SmartDashboard.putNumber("pegX", pegX);
+				SmartDashboard.putNumber("pegY", pegY);
+
+			} else {
+				SmartDashboard.putString("pegX", "unknown");
+				SmartDashboard.putString("pegY", "unknown");
+			}
+		}
 		
-	}
-	
-	//this method finds the coordinates of the peg -Imani L & Marlahna M
+		/* method to get the angle of the robot from the navX	-Malachi P	*/
+		public void getGyro(){
+
+			//Zero the gyro/yaw of the navX
+			if (driverStick.getRawAxis(LT_AXIS) > 0.5) {
+				ahrs.zeroYaw();
+			}
+
+			/* Display 6-axis Processed Angle Data                                      */
+			SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
+			SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+			SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
+			SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
+			SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll()); 
+
+			// Display tilt-corrected, Magnetometer-based heading (requires magnetometer calibration to be useful)                                   
+			//SmartDashboard.putNumber(   "IMU_CompassHeading",   ahrs.getCompassHeading());
+
+			// Display 9-axis Heading (requires magnetometer calibration to be useful)  
+			//SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+
+			// These functions are compatible w/the WPI Gyro Class, providing a simple path for upgrading from the Kit-of-Parts gyro to the navx-MXP            
+			SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle());
+			SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
+
+			// Display Processed Acceleration Data (Linear Acceleration, Motion Detect)        
+			//SmartDashboard.putNumber(   "IMU_Accel_X",          ahrs.getWorldLinearAccelX());
+			//SmartDashboard.putNumber(   "IMU_Accel_Y",          ahrs.getWorldLinearAccelY());
+			//SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
+			//SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+
+			// Omnimount Yaw Axis Information                                           
+			// For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  
+			//AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+			//SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+			//SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+
+			// Sensor Board Information                                                 
+			SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
+
+		}
+
 	
 		/* method to get the value from a Pneumatic pressure switch	*/
-		
-		
-		
-		
-		
-	
-	/* ----------	BASIC ROBOT FUNCTIONALITY METHODS	--------------------------------------------------------------------------*/
 
-		
+
+
+
+
+
+		/* ----------	BASIC ROBOT FUNCTIONALITY METHODS	--------------------------------------------------------------------------*/
+
 		/* basic "hova" rotation methods	*/
 		public void rotateUp(){
 			hovaRelay.set(Relay.Value.kForward); 	
@@ -404,153 +396,125 @@ public class Robot extends SampleRobot {
 		public void rotateDown(){
 			hovaRelay.set(Relay.Value.kReverse);	
 		}
-		
+
 		/* basic gear grabbing methods	-Jamesey	*/
 		public void holdGear(){
-			
+
 			this.hovaRelay.set(Relay.Value.kForward);
 		}
 		public void dropGear(){
 			this.hovaRelay.set(Relay.Value.kReverse);	 
 		}
-		
-		/* basic compressor functionality method	*/
-		
-		
-		public void directionCompressor(){
+
+		/* basic compressor functionality methods	*/
+		public void compressorOn(){
 			this.compressorRelay.set(Relay.Value.kForward);
 			SmartDashboard.putString("compressorStatus", "is on");
+		}
+		public void compressorOff(){
 			this.compressorRelay.set(Relay.Value.kOff);
 			SmartDashboard.putString("compressorStatus", "is off");
 		}
 		
 		/* basic climb method	*/
+		public void climbUp(){
+			this.climber.set(1.0);
+		}
+		public void climbDown(){
+			this.climber.set(-1.0);
+		}
+		public void dontClimb(){
+			this.climber.set(0.0);
+		}
 
-	public void climbUp(){
-		this.climber.set(1.0);
-	}
-	public void climbDown(){
-		this.climber.set(-1.0);
-	}
-	public void dontClimb(){
-		this.climber.set(0.0);
-	}
-	
-		
-	
-		
-		
-		
-		
-		
-	/* ----------	COMBO AUTO FUNCTIONS	--------------------------------------------------------------------------*/
-		
-	/* AUTO Method to aim and move robot towards peg	*/
-	public void autoAimRobot() { 
-		
-		double targetDistanceFromWall = 14.0;
-		getDistanceClose();
-		int targetX = 640/2;
-		int targetY = 480/2;
-		int range = 10;
-		
-		while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
-			findPeg(); 						// Updates the x & y values of the "Peg"
-	        getDistanceClose();  			//Updates distance/Value
-			
-			if(pegX < (targetX - range)) { 
-				strafeLeftAtSpeed(0.3);
-			}
-			else if (pegX > (targetX + range)) {
-				strafeRightAtSpeed(0.3);
-			}else{
-				goForwardAtSpeed(0.3);
+
+
+
+
+
+
+
+		/* ----------	COMBO AUTO FUNCTIONS	--------------------------------------------------------------------------*/
+
+		/* AUTO Method to aim and move robot towards peg	*/
+		public void autoAimRobot() { 
+
+			double targetDistanceFromWall = 14.0;
+			getDistanceClose();
+			int targetX = 640/2;
+			int targetY = 480/2;
+			int range = 10;
+
+			while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
+				getPegCoordinates(); 						// Updates the x & y values of the "Peg"
+				getDistanceClose();  			//Updates distance/Value
+
+				if(pegX < (targetX - range)) { 
+					strafeLeftAtSpeed(0.3);
+				}
+				else if (pegX > (targetX + range)) {
+					strafeRightAtSpeed(0.3);
+				}else{
+					goForwardAtSpeed(0.3);
+				}
 			}
 		}
-	}
-	
-	public void findPeg() {
-		Rect r0 = hkcam.getRect0();
-		Rect r1 = hkcam.getRect1();
-		
-		
-    	if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
-    		
-	        SmartDashboard.putNumber("Rec1 X", r1.x );
-        	SmartDashboard.putNumber("Rec0 X", r0.x );
-			
-        	target1x = r0.x + r0.width/2;
-        	target1y = r0.y + r0.height/2;
-        	target2x = r1.x + r1.width/2;
-        	target2y = r1.y + r1.height/2;
-        	
-			pegX = (target1x + target2x ) /2;
-			pegY = (target1y + target2y ) /2;
-			
-			SmartDashboard.putNumber("pegX", pegX);
-			SmartDashboard.putNumber("pegY", pegY);
-			
-    	} else {
-    		SmartDashboard.putString("pegX", "unknown");
-			SmartDashboard.putString("pegY", "unknown");
-    	}
-	}
 
-	
-	
-	/* this method places a gear on a peg -Shivanie H	*/
+
+
+		/* this method places a gear on a peg -Shivanie H	*/
 		public void placePeg() {
-		
 
-			
-			
-			
+
+
+
+
 		}		
 
-		
-	/* ------------------------------------------------------------------------------------*/
-	/* BASE AUTO FUNCTIONS */
-	
-	public void goForwardAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
-	}
-	
-	public void goBackwardAtSpeed (double speed){
-		robotDrive.mecanumDrive_Cartesian(0,0,-speed,0);
-	}
-	
-	public void stopDrive() {
-		robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
-	}
-	
-	public void strafeLeftAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
-	}
-	
-	public void strafeRightAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
-	}
-	
-	public void turnLeftAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, speed, 0, 0);
-	}
-	
-	public void turnRightAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, -speed, 0, 0);
-	}
-	
-	public void turnAndStrafe(double strafeSpeed, double turnSpeed) {
-		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
-	}
-	
-	/* ------------------------------------------------------------------------------------*/
-	/* COMBO AUTONOMOUS METHODS */
-	
-	public void strategyDestinationPin (Timer timerAuto){
 
-		
-	}
-	
+		/* ------------------------------------------------------------------------------------*/
+		/* BASE AUTO FUNCTIONS */
+
+		public void goForwardAtSpeed(double speed) {
+			robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
+		}
+
+		public void goBackwardAtSpeed (double speed){
+			robotDrive.mecanumDrive_Cartesian(0,0,-speed,0);
+		}
+
+		public void stopDrive() {
+			robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+		}
+
+		public void strafeLeftAtSpeed(double speed) {
+			robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
+		}
+
+		public void strafeRightAtSpeed(double speed) {
+			robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
+		}
+
+		public void turnLeftAtSpeed(double speed) {
+			robotDrive.mecanumDrive_Cartesian(0, speed, 0, 0);
+		}
+
+		public void turnRightAtSpeed(double speed) {
+			robotDrive.mecanumDrive_Cartesian(0, -speed, 0, 0);
+		}
+
+		public void turnAndStrafe(double strafeSpeed, double turnSpeed) {
+			robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
+		}
+
+		/* ------------------------------------------------------------------------------------*/
+		/* COMBO AUTONOMOUS METHODS */
+
+		public void strategyDestinationPin (Timer timerAuto){
+
+
+		}
+
 		//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 		public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
 			double timerA = timerAuto.get();
@@ -561,11 +525,11 @@ public class Robot extends SampleRobot {
 				stopDrive();
 			}
 		}
-		
+
 		//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 		public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
 			double timerA = timerAuto.get();
-			
+
 			if(timerA < 2.0) {
 				goForwardAtSpeed(0.3);
 			}else if(timerA < 3.0){
@@ -575,18 +539,18 @@ public class Robot extends SampleRobot {
 			} else if (timerA < 5.0){
 				placePeg();
 			} else if (timerA < 6.0) {
-			    goBackwardAtSpeed(0.3);
+				goBackwardAtSpeed(0.3);
 			} else if(timerA < 7.0) {
-			    turnLeftAtSpeed(0.3);
+				turnLeftAtSpeed(0.3);
 			} else if (timerA < 8.0){
 				goForwardAtSpeed(0.3);
 			} else{
 				stopDrive();
 			}			
-			
+
 		}		
-	
-	
-		
-}
-	
+
+
+
+	}
+
