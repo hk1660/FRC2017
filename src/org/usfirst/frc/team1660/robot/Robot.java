@@ -257,10 +257,15 @@ public class Robot extends SampleRobot {
 	
 
 	public void checkClimbRope(){
-		if(manipStick.getRawAxis(LT_AXIS)>.5){
-			climbUp();
-		} else if(manipStick.getRawAxis(RT_AXIS)>.5){
-			climbDown();
+		
+		double thresh = 0.2;
+		double upSpeed = manipStick.getRawAxis(LT_AXIS);
+		double downSpeed = manipStick.getRawAxis(RT_AXIS);
+		
+		if(upSpeed > thresh){
+			climbUp(upSpeed);
+		} else if(downSpeed > thresh){
+			climbDown(downSpeed);
 		} else {
 			dontClimb();
 		}
@@ -421,11 +426,11 @@ public class Robot extends SampleRobot {
 	}
 
 	/* basic climb method	*/
-	public void climbUp(){
-		this.climber.set(1.0);
+	public void climbUp(double x){
+		this.climber.set(x);
 	}
-	public void climbDown(){
-		this.climber.set(-1.0);
+	public void climbDown(double x){
+		this.climber.set(-x);
 	}
 	public void dontClimb(){
 		this.climber.set(0.0);
