@@ -30,6 +30,7 @@ public class Robot extends SampleRobot {
 	AHRS ahrs;
 	HKdrive robotDrive;
 	HKcam hkcam;
+	boolean gyroFlag = false;
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -136,7 +137,10 @@ public class Robot extends SampleRobot {
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
-
+		 robotDrive.drive(-0.5, 0.0);
+		 robotDrive.
+		 Timer.delay(2.0);
+	      robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
 		//	 int currentStrategy = (int) strategy.getSelected(); 
@@ -150,6 +154,7 @@ public class Robot extends SampleRobot {
 			//     }  
 
 		}
+
 
 	}
 
@@ -209,8 +214,13 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber("rotate",	rotateValue);
 		SmartDashboard.putNumber("strafe",	strafe);
 		SmartDashboard.putNumber("angle",	angle);
-		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
-
+		
+		if(gyroFlag == true){
+			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
+			
+		} else {
+			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
+		}
 	}
 
 	public double squareInput(double x) {
