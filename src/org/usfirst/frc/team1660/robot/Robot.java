@@ -48,7 +48,7 @@ public class Robot extends SampleRobot {
 	DigitalOutput trigger = new DigitalOutput(8);
 	DigitalInput echo = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
-	DigitalInput limitSwitch = new DigitalInput(0);
+	DigitalInput gearDetector = new DigitalInput(0);
 
 
 	/* SmartDashboard objects  */
@@ -138,7 +138,7 @@ public class Robot extends SampleRobot {
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
 		 robotDrive.drive(-0.5, 0.0);
-		 robotDrive.
+
 		 Timer.delay(2.0);
 	      robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
@@ -234,16 +234,23 @@ public class Robot extends SampleRobot {
 
 	/* Joystick method to eat and spit gears on ground	*/
 	public void checkMiniGears() {
-		if(manipStick.getRawButton(A_BUTTON)==true){
-			miniGearFRight.set(1.0);
-			miniGearFLeft.set(-1.0);
+	//	int thresh = .2;
+		//double x = manipStick.getRawButton(A_BUTTON);
+		
+		if(manipStick.getRawButton(B_BUTTON)==true){
+			takeMiniGears();
 		}
-		else if (manipStick.getRawButton(B_BUTTON)== true){
-			miniGearFRight.set(-1.0);
-			miniGearFLeft.set(1.0);
+		else if (manipStick.getRawButton(A_BUTTON)==true)
+			{
+			spitMiniGears();
+		}
+	
+		else{
+			stopMiniGears();
 		}
 	}
 
+	
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getRawButton(Y_BUTTON) == true){
@@ -321,9 +328,9 @@ public class Robot extends SampleRobot {
 		return y;
 	}
 
-	// limitswitch to check if we have a gear, then used to move Hova up
+	// gearDetector to check if we have a gear, then used to move Hova up
 	public boolean isGear(){
-		boolean gotGear = limitSwitch.get();
+		boolean gotGear = gearDetector.get();
 		SmartDashboard.putBoolean("gotGear?", gotGear);
 		return gotGear;
 	}
@@ -447,6 +454,19 @@ public class Robot extends SampleRobot {
 	}
 
 
+	/* Joystick method to eat and spit gears on ground	*/
+	public void takeMiniGears() {
+			miniGearFRight.set(1.0);
+			miniGearFLeft.set(-1.0);
+	}
+	public void spitMiniGears() {
+			miniGearFRight.set(-1.0);
+			miniGearFLeft.set(1.0);
+	}
+public void stopMiniGears(){	
+			miniGearFRight.set(0.0);
+			miniGearFLeft.set(0.0);
+		}
 
 
 
