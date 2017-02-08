@@ -310,9 +310,9 @@ public class Robot extends SampleRobot {
 	public void pickupcombo(){
 	      
 		 Timer dd = new Timer();
-		 dd = AutoTimer.get();
+		 dd.start();
 		
-		while (isGear == false && dd <  10.0){
+		while (isGear() == false && dd.get() <  10.0){
 			takeMiniGears();
 		 }
        
@@ -323,7 +323,7 @@ public class Robot extends SampleRobot {
 	 
 	
   
-}
+
 
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
