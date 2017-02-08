@@ -306,7 +306,24 @@ public class Robot extends SampleRobot {
 	/* Joystick Combo method to place a gear on a peg automatically	*/
 
 
-
+       // combo code Donashia and Jamesey
+	public void pickupcombo(){
+	      
+		 Timer dd = new Timer();
+		 dd = AutoTimer.get();
+		
+		while (isGear == false && dd <  10.0){
+			takeMiniGears();
+		 }
+       
+		   holdGear();
+		   
+		   rotateUp();
+		 }
+	 
+	
+  
+}
 
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
@@ -455,7 +472,7 @@ public class Robot extends SampleRobot {
 
 
 	/* Joystick method to eat and spit gears on ground	*/
-	public void takeMiniGears() {
+	public void takeMiniGears(){
 			miniGearFRight.set(1.0);
 			miniGearFLeft.set(-1.0);
 	}
