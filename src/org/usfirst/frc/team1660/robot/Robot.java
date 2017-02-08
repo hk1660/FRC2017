@@ -360,9 +360,6 @@ public class Robot extends SampleRobot {
 
 		if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
 
-			SmartDashboard.putNumber("Rec1 X", r1.x );
-			SmartDashboard.putNumber("Rec0 X", r0.x );
-
 			target1x = r0.x + r0.width/2;
 			target1y = r0.y + r0.height/2;
 			target2x = r1.x + r1.width/2;
@@ -370,13 +367,6 @@ public class Robot extends SampleRobot {
 
 			pegX = (target1x + target2x ) /2;
 			pegY = (target1y + target2y ) /2;
-
-			SmartDashboard.putNumber("pegX", pegX);
-			SmartDashboard.putNumber("pegY", pegY);
-
-		} else {
-			SmartDashboard.putString("pegX", "unknown");
-			SmartDashboard.putString("pegY", "unknown");
 		}
 	}
 
