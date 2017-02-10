@@ -166,7 +166,7 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 
 			checkDriving();
-			//getGyro();
+			getGyro();
 
 			checkMiniGears();
 			isGear();
@@ -322,8 +322,12 @@ public class Robot extends SampleRobot {
 		 }
 	 
 	
-  
-
+  public void turnGyroOn(){
+	  gyroFlag = true;
+  }
+public void turnGyroOff(){
+	gyroFlag = false;
+}
 
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
