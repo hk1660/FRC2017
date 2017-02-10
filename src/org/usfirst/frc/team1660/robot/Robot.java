@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.SensorBase;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
 
 
 public class Robot extends SampleRobot {
@@ -31,6 +33,8 @@ public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	HKcam hkcam;
 	boolean gyroFlag = false;
+	PIDController turnController;
+	double rotateToAngleRate;
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -56,7 +60,7 @@ public class Robot extends SampleRobot {
 	SendableChooser strategy;
 
 
-	/* Xbox controllers Setup -Jamesey	*/
+//	/* Xbox controllers Setup -Jamesey	*/
 	final int A_BUTTON = 1;
 	final int B_BUTTON = 2;
 	final int X_BUTTON = 3;
@@ -77,6 +81,10 @@ public class Robot extends SampleRobot {
 	final int POV_LEFT = 270;
 	final int POV_DOWN = 180;
 	final int POV_RIGHT = 90;
+	final double kP = 0.03;
+	final double kI = 0.00;
+	final double kD = 0.00;
+	final double kF = 0.00;
 
 	Joystick driverStick = new Joystick(0);
 	Joystick manipStick = new Joystick(1);
@@ -110,14 +118,20 @@ public class Robot extends SampleRobot {
 		} catch (RuntimeException ex ) {
 			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 		}
-
+		turnController = new PIDController(kP, kI, kD, kF, ahrs, this);
+	      turnController.setInputRange(-180.0f,  180.0f);
+	      turnController.setOutputRange(-1.0, 1.0);
+	      turnController.setContinuous(true);
 	}
 
+	public void test(){
+		rotateToAngleRate = output;
+	}
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
 
-		//hkcam = new HKcam();
-		//hkcam.camInit();
+		hkcam = new HKcam();
+		hkcam.camInit();
 
 		//CHOOSING AUTO MODE
 		startingPosition = new SendableChooser();
@@ -143,20 +157,22 @@ public class Robot extends SampleRobot {
 	      robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
-		//	 int currentStrategy = (int) strategy.getSelected(); 
+		 int currentStrategy = (int) strategy.getSelected(); 
 		while(isAutonomous() && isEnabled()){ 
 
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("match time",timerA);
-			//	   if(currentStrategy == 1) {
+			   if(currentStrategy == 1) {
 			runAutoStrategy_GoForwardOnly(timerAuto); 
 			// runAutoStrategy_PlaceGearLeftPeg(timerAuto);
-			//     }  
+			    }  
 
 		}
+while(getRangeInches() > 24.0){
+	goForwardOnly();
+	
+}
 
-
-	}
 
 
 	public void operatorControl() {
@@ -166,7 +182,7 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 
 			checkDriving();
-			//getGyro();
+			getGyro();
 
 			checkMiniGears();
 			isGear();
@@ -250,7 +266,17 @@ public class Robot extends SampleRobot {
 		}
 	}
 
-	
+	public void turnGyroOn(){
+		if (driverStick.getRawButton(A_BUTTON)==true){
+			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
+		}
+		
+	}
+	public void turnOffGyro(){
+		if(driverStick.getRawButton(B_BUTTON)==true){
+			ahrs.reset();
+		}
+	}
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getRawButton(Y_BUTTON) == true){
@@ -296,6 +322,10 @@ public class Robot extends SampleRobot {
 		}
 		else if(manipStick.getPOV() == POV_UP){
 			this.compressorOn();
+			
+	public void rotateToAngle(){
+		
+	}
 		}
 	}
 	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
@@ -369,6 +399,7 @@ public class Robot extends SampleRobot {
 		//Zero the gyro/yaw of the navX
 		if (driverStick.getRawAxis(LT_AXIS) > 0.5) {
 			ahrs.zeroYaw();
+			
 		}
 
 		/* Display 6-axis Processed Angle Data                                      */
@@ -591,5 +622,5 @@ public void stopMiniGears(){
 
 
 
-}
+
 
