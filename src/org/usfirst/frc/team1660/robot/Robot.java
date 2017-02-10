@@ -116,8 +116,8 @@ public class Robot extends SampleRobot {
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
 
-		//hkcam = new HKcam();
-		//hkcam.camInit();
+		hkcam = new HKcam();
+		hkcam.camInit();
 
 		//CHOOSING AUTO MODE
 		startingPosition = new SendableChooser();
