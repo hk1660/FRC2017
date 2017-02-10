@@ -268,13 +268,13 @@ while(getRangeInches() > 24.0){
 
 	public void turnGyroOn(){
 		if (driverStick.getRawButton(A_BUTTON)==true){
-			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
+			gyroFlag = true;
 		}
 		
 	}
 	public void turnOffGyro(){
 		if(driverStick.getRawButton(B_BUTTON)==true){
-			ahrs.reset();
+			gyroFlag = false;
 		}
 	}
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
