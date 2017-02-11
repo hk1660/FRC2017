@@ -49,7 +49,7 @@ public class Robot extends SampleRobot {
 	DigitalInput echo = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput gearDetector = new DigitalInput(0);
-	DigitalInput pressureSwitch = new DigitalInput();
+	DigitalInput pressureSwitch = new DigitalInput(1);
 
 
 	/* SmartDashboard objects  */
@@ -298,14 +298,13 @@ public class Robot extends SampleRobot {
 	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
-		String y = 
-		if(manipStick.getPOV() == POV_DOWN){
+		if(manipStick.getRawAxis(POV_UP)>0.5){
 			this.compressorOff();
-			SmartDashboard.putBoolean("Compressor: ", "OFF-button");
+			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
-		else if(manipStick.getPOV() == POV_UP){
+		else if(manipStick.getRawAxis(POV_DOWN)>0.5){
 			this.compressorOn();
-			SmartDashboard.putBoolean("Compressor: ", "ON-button");
+			SmartDashboard.putString("Compressor: ", "ON-button");
 		}
 		
 	}
@@ -318,7 +317,7 @@ public class Robot extends SampleRobot {
 		} else {
 			compressorOff();
 		}
-		SmartDashboard.putBoolean("Compressor: ", y + "-switch");
+		SmartDashboard.putString("Compressor: ", y + "-switch");
 		return y;
 	}
 
@@ -326,11 +325,24 @@ public class Robot extends SampleRobot {
 	/* method to turn robot to 90 degrees	-Malachi P	*/
 	public void checkTurnRobot(){
 		if(manipStick.getRawAxis(POV_LEFT)>0.5){
-			turnRobotGyro(90);
+			//turnRobotGyro(90);
 		}
 	}
 
 	/* Joystick Combo method to pick up a gear-Donashia	*/
+	/*public void checkGear(){
+		
+		if(manipStick.getRawButton(Y_BUTTON) == true){
+			pickUp();
+		
+		}
+			
+			
+		else if(manipStick.getRawButton(X_BUTTON) == false);
+		        putDown();
+		}
+		
+	*/
 	
 
 	
@@ -600,7 +612,7 @@ public class Robot extends SampleRobot {
 
 	//method to turn to a specific field-orientation -Malachi & Ahmed
 	public void turnRobotAngle(int angle){
-		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
+		//robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
 		
 	}
 	
@@ -637,7 +649,7 @@ public class Robot extends SampleRobot {
 		} else if (timerA < 4.0){ 
 			goForwardAtSpeed(0.3);
 		} else if (timerA < 5.0){
-			placePeg();
+			//placePeg();
 		} else if (timerA < 6.0) {
 			goBackwardAtSpeed(0.3);
 		} else if(timerA < 7.0) {
