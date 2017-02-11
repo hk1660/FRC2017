@@ -166,9 +166,11 @@ public class Robot extends SampleRobot {
 
 		while (isOperatorControl() && isEnabled()) {
 
+			/*Driving commands		*/
 			checkDriving();
 			getGyro();
 
+			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
 			checkHockey();
@@ -176,12 +178,15 @@ public class Robot extends SampleRobot {
 			//checkCompressor();
 			checkCompressorSwitch();
 
-			checkClimbRope();
+			/* Gear Placing commands		*/
 			//getPegCoordinates();
 			getDistanceFar();
 			getDistanceClose();
 			//placePeg();
-
+			
+			/* Climbing commands	*/
+			checkClimbRope();
+			
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
 		}
@@ -290,59 +295,42 @@ public class Robot extends SampleRobot {
 		}
 	} 
 
-	/*	method to turn compressor on or off	-???	*/
+	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
+		String y = 
 		if(manipStick.getPOV() == POV_DOWN){
 			this.compressorOff();
+			SmartDashboard.putBoolean("Compressor: ", "OFF-button");
 		}
 		else if(manipStick.getPOV() == POV_UP){
 			this.compressorOn();
+			SmartDashboard.putBoolean("Compressor: ", "ON-button");
 		}
+		
 	}
-	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
-
-
-
-
-	/* Joystick Combo method to place a gear on a peg automatically	*/
-
-
-	// combo code Donashia and Jamesey
-	public void pickupcombo(){
-
-		Timer dd = new Timer();
-		dd.start();
-
-		while (isGear() == false && dd.get() <  10.0){
-			takeMiniGears();
-		}
-
-		holdGear();
-
-		rotateUp();
-	}
-
-
-	public void turnGyroOn(){
-		gyroFlag = true;
-	}
-	public void turnGyroOff(){
-		gyroFlag = false;
-	}
-
+	
+	/* method to turn automatically turn on/off compressor based on pressure switch	-Jamesey & Donashia	*/
 	public boolean checkCompressorSwitch(){
 		boolean y = pressureSwitch.get();
 		if( pressureSwitch.get() == true) {
 			compressorOn();
 		} else {
 			compressorOff();
-
 		}
-		
-		SmartDashboard.putBoolean("The Compressor is ", y);
+		SmartDashboard.putBoolean("Compressor: ", y + "-switch");
 		return y;
 	}
+
+	
+
+
+	/* Joystick Combo method to place a gear on a peg automatically	*/
+
+
+
+
+
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
 
@@ -481,7 +469,7 @@ public class Robot extends SampleRobot {
 	}
 
 
-	/* Joystick method to eat and spit gears on ground	*/
+	/* basic method to take and spit gears on ground	*/
 	public void takeMiniGears(){
 		miniGearFRight.set(1.0);
 		miniGearFLeft.set(-1.0);
@@ -495,15 +483,40 @@ public class Robot extends SampleRobot {
 		miniGearFLeft.set(0.0);
 	}
 
+	/* basic method to turn gyro-driving on and off	-Malachi P	*/
+	public void turnGyroOn(){
+		gyroFlag = true;
+	}
+	public void turnGyroOff(){
+		gyroFlag = false;
+	}
 
 
 
+	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
+	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
+	public void comboPickUp(){
 
-	/* ----------	COMBO AUTO FUNCTIONS	--------------------------------------------------------------------------*/
+		Timer dd = new Timer();
+		dd.start();
+		Timer jj = new Timer();
 
-	/* AUTO Method to aim and move robot towards peg	*/
-	public void autoAimRobot() { 
+		if(isGear() == false && dd.get() <  5.0){
+			takeMiniGears();
+		} else if (isGear() == true) {
+			holdGear();
+			dd.stop();
+			jj.start();
+		} else if (jj.get() > 1.0 && jj.get() < 2.0){
+			rotateUp();
+			jj.stop();
+		}
+	}
+
+	
+	/* Combo Method to aim and move robot towards peg	*/
+	public void comboAimRobot() { 
 
 		double targetDistanceFromWall = 14.0;
 		getDistanceClose();
@@ -529,7 +542,7 @@ public class Robot extends SampleRobot {
 
 
 	/* this method places a gear on a peg -Shivanie H	*/
-	public void placePeg() {
+	public void comboPlacePeg() {
 
 
 
@@ -537,9 +550,11 @@ public class Robot extends SampleRobot {
 
 	}		
 
+	
+	
 
 	/* ------------------------------------------------------------------------------------*/
-	/* BASE AUTO FUNCTIONS */
+	/* BASIC AUTO FUNCTIONS */
 
 	public void goForwardAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
@@ -573,6 +588,12 @@ public class Robot extends SampleRobot {
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
 
+	//method to turn to a specific field-orientation -Malachi & Ahmed
+	//???
+	
+	
+	
+	
 	/* ------------------------------------------------------------------------------------*/
 	/* COMBO AUTONOMOUS METHODS */
 
