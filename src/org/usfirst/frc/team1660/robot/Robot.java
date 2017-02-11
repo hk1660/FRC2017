@@ -116,7 +116,7 @@ public class Robot extends SampleRobot {
 
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
-
+		
 		hkcam = new HKcam();
 		hkcam.camInit();
 
@@ -368,6 +368,7 @@ public class Robot extends SampleRobot {
 	public double getDistanceClose(){
 		ultraSonicShort.setAutomaticMode(true);
 		ultraSonicShort.setEnabled(true);
+		
 		double y = ultraSonicShort.getRangeInches();
 		double  x = ultraSonicShort.getRangeInches();
 		distanceFromWall = y;
