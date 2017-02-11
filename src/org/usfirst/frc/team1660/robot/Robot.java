@@ -323,8 +323,18 @@ public class Robot extends SampleRobot {
 	}
 
 	
+	/* method to turn robot to 90 degrees	-Malachi P	*/
+	public void checkTurnRobot(){
+		if(manipStick.getRawAxis(POV_LEFT)>0.5){
+			turnRobotGyro(90);
+		}
+	}
 
+	/* Joystick Combo method to pick up a gear-Donashia	*/
+	
 
+	
+	
 	/* Joystick Combo method to place a gear on a peg automatically	*/
 
 
@@ -554,7 +564,7 @@ public class Robot extends SampleRobot {
 	
 
 	/* ------------------------------------------------------------------------------------*/
-	/* BASIC AUTO FUNCTIONS */
+	/* BASIC DRIVETRAIN FUNCTIONS */
 
 	public void goForwardAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
@@ -589,7 +599,10 @@ public class Robot extends SampleRobot {
 	}
 
 	//method to turn to a specific field-orientation -Malachi & Ahmed
-	//???
+	public void turnRobotAngle(int angle){
+		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
+		
+	}
 	
 	
 	
