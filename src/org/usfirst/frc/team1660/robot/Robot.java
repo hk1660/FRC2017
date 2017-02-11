@@ -127,6 +127,7 @@ public class Robot extends SampleRobot {
 	public void test(){
 		rotateToAngleRate = output;
 	}
+
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
 
@@ -168,10 +169,11 @@ public class Robot extends SampleRobot {
 			    }  
 
 		}
-while(getRangeInches() > 24.0){
+	}
+/*while(getRangeInches() > 24.0){
 	goForwardOnly();
 	
-}
+}*/
 
 
 
@@ -296,6 +298,11 @@ while(getRangeInches() > 24.0){
 			dropGear();
 		}
 	}
+	public void turn90(){
+		if(manipStick.getRawAxis(POV_LEFT)>0.5){
+			turnRobot();
+		}
+	}
 
 	
 
@@ -323,9 +330,7 @@ while(getRangeInches() > 24.0){
 		else if(manipStick.getPOV() == POV_UP){
 			this.compressorOn();
 			
-	public void rotateToAngle(){
-		
-	}
+
 		}
 	}
 	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
@@ -540,7 +545,9 @@ public void stopMiniGears(){
 
 
 	}		
-
+public void turnRobotGyro(int angle ){
+	robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 90 );
+}
 
 	/* ------------------------------------------------------------------------------------*/
 	/* BASE AUTO FUNCTIONS */
@@ -617,8 +624,9 @@ public void stopMiniGears(){
 		} else{
 			stopDrive();
 		}			
+	}
+}
 
-	}		
 
 
 
