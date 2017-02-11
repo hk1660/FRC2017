@@ -81,7 +81,7 @@ public class Robot extends SampleRobot {
 	final int POV_LEFT = 270;
 	final int POV_DOWN = 180;
 	final int POV_RIGHT = 90;
-	final double kP = 0.03;
+	final double kP = 0.00;
 	final double kI = 0.00;
 	final double kD = 0.00;
 	final double kF = 0.00;
@@ -118,15 +118,15 @@ public class Robot extends SampleRobot {
 		} catch (RuntimeException ex ) {
 			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 		}
-		turnController = new PIDController(kP, kI, kD, kF, ahrs, this);
+		/*turnController = new PIDController(kP, kI, kD, kF, ahrs, this);
 	      turnController.setInputRange(-180.0f,  180.0f);
 	      turnController.setOutputRange(-1.0, 1.0);
-	      turnController.setContinuous(true);
+	      turnController.setContinuous(true);*/
 	}
 
-	public void test(){
+	/*public void test(){
 		rotateToAngleRate = output;
-	}
+	}*/
 
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
@@ -298,9 +298,9 @@ public class Robot extends SampleRobot {
 			dropGear();
 		}
 	}
-	public void turn90(){
+	public void checkTurnRobot(){
 		if(manipStick.getRawAxis(POV_LEFT)>0.5){
-			turnRobot();
+			turnRobotGyro(90);
 		}
 	}
 
@@ -546,7 +546,7 @@ public void stopMiniGears(){
 
 	}		
 public void turnRobotGyro(int angle ){
-	robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 90 );
+	robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle );
 }
 
 	/* ------------------------------------------------------------------------------------*/
