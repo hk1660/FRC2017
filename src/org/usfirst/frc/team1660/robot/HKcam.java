@@ -27,6 +27,7 @@ public class HKcam {
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
 		
 		camera.setFPS(30);
+		camera.setWhiteBalanceAuto();
 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 			try{
