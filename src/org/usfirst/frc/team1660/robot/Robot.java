@@ -329,7 +329,7 @@ public class Robot extends SampleRobot {
 		}
 	}
 
-	/* Joystick Combo method to pick up a gear-Donashia	*/
+	/* Joystick Combo method to pick up a gear-X	*/
 	/*public void checkGear(){
 		
 		if(manipStick.getRawButton(Y_BUTTON) == true){
@@ -518,21 +518,37 @@ public class Robot extends SampleRobot {
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-	public void comboPickUp(){
-
-		Timer dd = new Timer();
-		dd.start();
-		Timer jj = new Timer();
-
-		if(isGear() == false && dd.get() <  5.0){
-			takeMiniGears();
-		} else if (isGear() == true) {
+	Timer comboPickUpTimer = new Timer();
+	Timer comboPickupTimer2 = new Timer();
+	
+	public void checkComboPickUpButton(){
+		if(driverStick.getRawButton(Y_BUTTON) == true){
+			comboPickUpTimer.restart();
+		}
+	}
+	
+	public void checkComboPickUpTimer() {
+		if (comboPickUpTimer.isRunning()){
+			if(comboPickupTimer.get() < 5 || !isGear()){
+				takeMiniGears();
+				if(!comboPickupTimer2.isRunning()){
+					comboPickupTimer2.start();
+				}
+			}
+			if(comboPickUpTimer > 5){
+				comboPickUpTimer.reset();
+				comboPickUpTimer.stop();
+			}
+		}
+		if(comboPickupTimer2.get() < 2){
 			holdGear();
-			dd.stop();
-			jj.start();
-		} else if (jj.get() > 1.0 && jj.get() < 2.0){
+		}
+		if(comboPickupTimer2.get() > 2 && comboPickupTimer2.get() < 6) {
 			rotateUp();
-			jj.stop();
+		}
+		if(comboPickupTimer2.get() > 6){
+			comboPickupTimer2.reset();
+			comboPickupTimer2.stop();
 		}
 	}
 
