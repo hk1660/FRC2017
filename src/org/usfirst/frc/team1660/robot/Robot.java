@@ -50,7 +50,7 @@ public class Robot extends SampleRobot {
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput gearDetector = new DigitalInput(0);
 	DigitalInput pressureSwitch = new DigitalInput(1);
-
+int white=0;
 
 	/* SmartDashboard objects  */
 	SendableChooser startingPosition;
@@ -165,7 +165,8 @@ public class Robot extends SampleRobot {
 		robotDrive.setSafetyEnabled(true);
 
 		while (isOperatorControl() && isEnabled()) {
-
+//camera stuff
+			changeExposure();
 			/*Driving commands		*/
 			checkDriving();
 			getGyro();
@@ -277,7 +278,25 @@ public class Robot extends SampleRobot {
 			dropGear();
 		}
 	}
+public void changeExposure(){
+	
+	if(driverStick.getRawButton(Y_BUTTON)==true){
+		white=white+5;
+		if(white>100){
+			white=100;
+		}
+		hkcam.camera.setExposureManual(white);
+	}
+	if(driverStick.getRawButton(X_BUTTON)==true){
+		white=white-5;
+		if(white<0){
+			white=0;
+		}
+		hkcam.camera.setExposureManual(white);
 
+	}
+		SmartDashboard.putNumber("white resolution", white);
+}
 
 
 	public void checkClimbRope(){

@@ -18,16 +18,17 @@ public class HKcam {
 	private Rect r1 = new Rect();
 	private int numRectangles = -1;
 	Object camLock = new Object();
-
+UsbCamera camera;
 	// METHODS
 
 	public void camInit() {
 
 		/* Creates UsbCamera and MjpegServer [1] and connects them */
-		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-		
+		//UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+		camera = CameraServer.getInstance().startAutomaticCapture();
 		camera.setFPS(30);
 		camera.setWhiteBalanceAuto();
+		//camera.setExposureManual(value);
 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 			try{
