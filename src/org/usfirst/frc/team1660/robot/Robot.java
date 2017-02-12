@@ -175,8 +175,8 @@ public class Robot extends SampleRobot {
 			isGear();
 			checkHockey();
 			checkHova();
-			//checkCompressor();
-			checkCompressorSwitch();
+			checkCompressor();
+			//checkCompressorSwitch();
 
 			/* Gear Placing commands		*/
 			//getPegCoordinates();
@@ -298,13 +298,13 @@ public class Robot extends SampleRobot {
 	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
-		if(manipStick.getRawAxis(POV_UP)>0.5){
-			this.compressorOff();
-			SmartDashboard.putString("Compressor: ", "OFF-button");
-		}
-		else if(manipStick.getRawAxis(POV_DOWN)>0.5){
+		if(manipStick.getPOV() == POV_UP){
 			this.compressorOn();
 			SmartDashboard.putString("Compressor: ", "ON-button");
+		}
+		else if(manipStick.getPOV() == POV_DOWN){
+			this.compressorOff();
+			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
 		
 	}
@@ -524,21 +524,21 @@ public class Robot extends SampleRobot {
 	
 	public void checkComboPickUpButton(){
 		if(driverStick.getRawButton(Y_BUTTON) == true){
-			comboPickUpTimer.restart();
+			comboPickUpTimer.reset();
 		}
 	}
 	
 	public void checkComboPickUpTimer() {
-		if (comboPickUpTimer.isRunning()){
-			if(comboPickupTimer.get() < 5 || !isGear()){
+		if (comboPickUpTimer.get() != 0){
+			if(comboPickUpTimer.get() < 5 || !isGear()){
 				takeMiniGears();
-				if(!comboPickupTimer2.isRunning()){
+				if(comboPickupTimer2.get() == 0){
 					comboPickupTimer2.start();
 				}
 			}
-			if(comboPickUpTimer > 5){
-				comboPickUpTimer.reset();
+			if(comboPickUpTimer.get() > 5.0){
 				comboPickUpTimer.stop();
+				comboPickUpTimer.reset();
 			}
 		}
 		if(comboPickupTimer2.get() < 2){
