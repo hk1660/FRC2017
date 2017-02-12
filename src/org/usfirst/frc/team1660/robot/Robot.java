@@ -21,9 +21,11 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.SensorBase;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
 
 
-public class Robot extends SampleRobot {
+public class Robot extends SampleRobot implements PIDOutput {
 
 	/* ----------	Robot VARIABLES/FIELDS	--------------------------------------------------------------------------*/
 
@@ -31,6 +33,9 @@ public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	HKcam hkcam;
 	boolean gyroFlag = false;
+	boolean ninjaFlag = false;
+	PIDController ninjaController;
+	double rotateToAngleRate;
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -50,7 +55,7 @@ public class Robot extends SampleRobot {
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput gearDetector = new DigitalInput(0);
 	DigitalInput pressureSwitch = new DigitalInput(1);
-int white=0;
+	int white=0;
 
 	/* SmartDashboard objects  */
 	SendableChooser startingPosition;
@@ -116,7 +121,7 @@ int white=0;
 
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
-		
+
 		hkcam = new HKcam();
 		hkcam.camInit();
 
@@ -138,10 +143,10 @@ int white=0;
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
-		robotDrive.drive(-0.5, 0.0);
+		//robotDrive.drive(-0.5, 0.0);
 
-		Timer.delay(2.0);
-		robotDrive.drive(0.0, 0.0);
+		//Timer.delay(2.0);
+		//robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
 		//	 int currentStrategy = (int) strategy.getSelected(); 
@@ -165,29 +170,33 @@ int white=0;
 		robotDrive.setSafetyEnabled(true);
 
 		while (isOperatorControl() && isEnabled()) {
-//camera stuff
-			changeExposure();
+
 			/*Driving commands		*/
 			checkDriving();
 			getGyro();
+			checkGyroFlag();
+			checkTurnRobotAngle();
 
 			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
 			checkHockey();
 			checkHova();
-			checkCompressor();
-			//checkCompressorSwitch();
+			//checkCompressor();
+			checkCompressorSwitch();
+			//checkComboPickUpGear();
 
 			/* Gear Placing commands		*/
 			//getPegCoordinates();
 			getDistanceFar();
 			getDistanceClose();
-			//placePeg();
-			
+
 			/* Climbing commands	*/
 			checkClimbRope();
-			
+
+			/*Camera Testing		*/
+			changeExposure();
+
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
 		}
@@ -223,10 +232,11 @@ int white=0;
 		SmartDashboard.putNumber("strafe",	strafe);
 		SmartDashboard.putNumber("angle",	angle);
 
-		if(gyroFlag == true){
+
+		if(gyroFlag == true && ninjaFlag == false ){
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
 
-		} else {
+		} else if(ninjaFlag == false) {
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
 		}
 	}
@@ -258,6 +268,24 @@ int white=0;
 		}
 	}
 
+	/* joystick method to flip the gyroflag -Malachi P	*/
+	public void checkGyroFlag(){
+		if(driverStick.getRawButton(A_BUTTON)==true){
+			this.turnGyroOn();
+		}
+		if(driverStick.getRawButton(B_BUTTON)==true){
+			this.turnGyroOff();
+		}
+	}
+
+	/* joystick method to flip the ninjaflag to be able to rotate to a specific angle 	-Malachi P & Jamesey E	*/
+	public void checkNinjaFlag(){
+		if(driverStick.getRawButton(X_BUTTON)==true){
+			this.turnNinjaOn();
+			//this.turnRobotAngle(90);
+			this.turnNinjaOff();
+		}	
+	}
 
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
@@ -278,27 +306,8 @@ int white=0;
 			dropGear();
 		}
 	}
-public void changeExposure(){
-	
-	if(driverStick.getRawButton(Y_BUTTON)==true){
-		white=white+5;
-		if(white>100){
-			white=100;
-		}
-		hkcam.camera.setExposureManual(white);
-	}
-	if(driverStick.getRawButton(X_BUTTON)==true){
-		white=white-5;
-		if(white<0){
-			white=0;
-		}
-		hkcam.camera.setExposureManual(white);
 
-	}
-		SmartDashboard.putNumber("white resolution", white);
-}
-
-
+	/* Joystick method to climb rope	*/
 	public void checkClimbRope(){
 
 		double thresh = 0.2;
@@ -325,9 +334,9 @@ public void changeExposure(){
 			this.compressorOff();
 			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
-		
+
 	}
-	
+
 	/* method to turn automatically turn on/off compressor based on pressure switch	-Jamesey & Donashia	*/
 	public boolean checkCompressorSwitch(){
 		boolean y = pressureSwitch.get();
@@ -340,37 +349,187 @@ public void changeExposure(){
 		return y;
 	}
 
-	
+	/*Joystick method to manually adjust the exposure of the camera	-Ahmed A	*/
+	public void changeExposure(){
+
+		if(driverStick.getRawButton(Y_BUTTON)==true){
+			white=white+5;
+			if(white>100){
+				white=100;
+			}
+			hkcam.camera.setExposureManual(white);
+		}
+		if(driverStick.getRawButton(X_BUTTON)==true){
+			white=white-5;
+			if(white<0){
+				white=0;
+			}
+			hkcam.camera.setExposureManual(white);
+
+		}
+		SmartDashboard.putNumber("white resolution", white);
+	}
+
+
 	/* method to turn robot to 90 degrees	-Malachi P	*/
-	public void checkTurnRobot(){
-		if(manipStick.getRawAxis(POV_LEFT)>0.5){
-			//turnRobotGyro(90);
+	public void checkTurnRobotAngle(){
+		if(driverStick.getPOV() == POV_LEFT){
+			//turnRobotAngle(90);
 		}
 	}
 
-	/* Joystick Combo method to pick up a gear-X	*/
-	/*public void checkGear(){
-		
+	/* Joystick Combo method to pick up a gear -Donashia	*/
+	public void checkComboPickUpGear(){
 		if(manipStick.getRawButton(Y_BUTTON) == true){
-			pickUp();
-		
+			this.comboPickUpGear();
 		}
-			
-			
-		else if(manipStick.getRawButton(X_BUTTON) == false);
-		        putDown();
-		}
-		
-	*/
-	
+	}
 
-	
-	
 	/* Joystick Combo method to place a gear on a peg automatically	*/
 
 
 
 
+
+
+	/* ----------	BASIC ROBOT FUNCTIONALITY METHODS	--------------------------------------------------------------------------*/
+
+	/* basic "hova" rotation methods	*/
+	public void rotateUp(){
+		hovaRelay.set(Relay.Value.kForward); 	
+	}
+	public void rotateDown(){
+		hovaRelay.set(Relay.Value.kReverse);	
+	}
+
+	/* basic gear grabbing methods	-Jamesey	*/
+	public void holdGear(){
+
+		this.hockeyRelay.set(Relay.Value.kForward);
+	}
+	public void dropGear(){
+		this.hockeyRelay.set(Relay.Value.kReverse);	 
+	}
+
+	/* basic compressor functionality methods	*/
+	public void compressorOn(){
+		this.compressorRelay.set(Relay.Value.kForward);
+		SmartDashboard.putString("compressorStatus", "is on");
+	}
+	public void compressorOff(){
+		this.compressorRelay.set(Relay.Value.kOff);
+		SmartDashboard.putString("compressorStatus", "is off");
+	}
+
+	/* basic climb method	*/
+	public void climbUp(double x){
+		this.climber.set(x);
+	}
+	public void climbDown(double x){
+		this.climber.set(-x);
+	}
+	public void dontClimb(){
+		this.climber.set(0.0);
+	}
+
+	/* basic method to take and spit gears on ground	*/
+	public void takeMiniGears(){
+		miniGearFRight.set(1.0);
+		miniGearFLeft.set(-1.0);
+	}
+	public void spitMiniGears() {
+		miniGearFRight.set(-1.0);
+		miniGearFLeft.set(1.0);
+	}
+	public void stopMiniGears(){	
+		miniGearFRight.set(0.0);
+		miniGearFLeft.set(0.0);
+	}
+
+	/* basic method to turn gyro-driving on and off	-Malachi P	*/
+	public void turnGyroOn(){
+		gyroFlag = true;
+	}
+	public void turnGyroOff(){
+		gyroFlag = false;
+	}
+
+	/* basic method to flip flag to allow for gyro-based turns	-Malachi P	*/
+	public void turnNinjaOn(){
+		ninjaFlag = true;
+	}
+	public void turnNinjaOff(){
+		ninjaFlag = false;
+	}
+
+
+	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
+
+	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
+	Timer comboPickUpTimer = new Timer();
+	Timer comboPickupTimer2 = new Timer();
+
+	public void comboPickUpGear() {
+		comboPickUpTimer.reset();
+		if (comboPickUpTimer.get() != 0){
+			if(comboPickUpTimer.get() < 5 || !isGear()){
+				takeMiniGears();
+				if(comboPickupTimer2.get() == 0){
+					comboPickupTimer2.start();
+				}
+			}
+			if(comboPickUpTimer.get() > 5.0){
+				comboPickUpTimer.stop();
+				comboPickUpTimer.reset();
+			}
+		}
+		if(comboPickupTimer2.get() < 2){
+			holdGear();
+		}
+		if(comboPickupTimer2.get() > 2 && comboPickupTimer2.get() < 6) {
+			rotateUp();
+		}
+		if(comboPickupTimer2.get() > 6){
+			comboPickupTimer2.reset();
+			comboPickupTimer2.stop();
+		}
+	}
+
+
+	/* Combo Method to aim and move robot towards peg	*/
+	public void comboAimRobot() { 
+
+		double targetDistanceFromWall = 14.0;
+		getDistanceClose();
+		int targetX = 640/2;
+		int targetY = 480/2;
+		int range = 10;
+
+		while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
+			getPegCoordinates(); 						// Updates the x & y values of the "Peg"
+			getDistanceClose();  			//Updates distance/Value
+
+			if(pegX < (targetX - range)) { 
+				strafeLeftAtSpeed(0.3);
+			}
+			else if (pegX > (targetX + range)) {
+				strafeRightAtSpeed(0.3);
+			}else{
+				goForwardAtSpeed(0.3);
+			}
+		}
+	}
+
+
+
+	/* this method places a gear on a peg -Shivanie H	*/
+	public void comboPlacePeg() {
+
+
+
+
+
+	}		
 
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
@@ -387,7 +546,7 @@ public void changeExposure(){
 	public double getDistanceClose(){
 		ultraSonicShort.setAutomaticMode(true);
 		ultraSonicShort.setEnabled(true);
-		
+
 		double y = ultraSonicShort.getRangeInches();
 		double  x = ultraSonicShort.getRangeInches();
 		distanceFromWall = y;
@@ -463,154 +622,6 @@ public void changeExposure(){
 	}
 
 
-	/* method to get the value from a Pneumatic pressure switch	*/
-
-
-
-
-
-
-	/* ----------	BASIC ROBOT FUNCTIONALITY METHODS	--------------------------------------------------------------------------*/
-
-	/* basic "hova" rotation methods	*/
-	public void rotateUp(){
-		hovaRelay.set(Relay.Value.kForward); 	
-	}
-	public void rotateDown(){
-		hovaRelay.set(Relay.Value.kReverse);	
-	}
-
-	/* basic gear grabbing methods	-Jamesey	*/
-	public void holdGear(){
-
-		this.hockeyRelay.set(Relay.Value.kForward);
-	}
-	public void dropGear(){
-		this.hockeyRelay.set(Relay.Value.kReverse);	 
-	}
-
-	/* basic compressor functionality methods	*/
-	public void compressorOn(){
-		this.compressorRelay.set(Relay.Value.kForward);
-		SmartDashboard.putString("compressorStatus", "is on");
-	}
-	public void compressorOff(){
-		this.compressorRelay.set(Relay.Value.kOff);
-		SmartDashboard.putString("compressorStatus", "is off");
-	}
-
-	/* basic climb method	*/
-	public void climbUp(double x){
-		this.climber.set(x);
-	}
-	public void climbDown(double x){
-		this.climber.set(-x);
-	}
-	public void dontClimb(){
-		this.climber.set(0.0);
-	}
-
-
-	/* basic method to take and spit gears on ground	*/
-	public void takeMiniGears(){
-		miniGearFRight.set(1.0);
-		miniGearFLeft.set(-1.0);
-	}
-	public void spitMiniGears() {
-		miniGearFRight.set(-1.0);
-		miniGearFLeft.set(1.0);
-	}
-	public void stopMiniGears(){	
-		miniGearFRight.set(0.0);
-		miniGearFLeft.set(0.0);
-	}
-
-	/* basic method to turn gyro-driving on and off	-Malachi P	*/
-	public void turnGyroOn(){
-		gyroFlag = true;
-	}
-	public void turnGyroOff(){
-		gyroFlag = false;
-	}
-
-
-
-	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
-
-	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-	Timer comboPickUpTimer = new Timer();
-	Timer comboPickupTimer2 = new Timer();
-	
-	public void checkComboPickUpButton(){
-		if(driverStick.getRawButton(Y_BUTTON) == true){
-			comboPickUpTimer.reset();
-		}
-	}
-	
-	public void checkComboPickUpTimer() {
-		if (comboPickUpTimer.get() != 0){
-			if(comboPickUpTimer.get() < 5 || !isGear()){
-				takeMiniGears();
-				if(comboPickupTimer2.get() == 0){
-					comboPickupTimer2.start();
-				}
-			}
-			if(comboPickUpTimer.get() > 5.0){
-				comboPickUpTimer.stop();
-				comboPickUpTimer.reset();
-			}
-		}
-		if(comboPickupTimer2.get() < 2){
-			holdGear();
-		}
-		if(comboPickupTimer2.get() > 2 && comboPickupTimer2.get() < 6) {
-			rotateUp();
-		}
-		if(comboPickupTimer2.get() > 6){
-			comboPickupTimer2.reset();
-			comboPickupTimer2.stop();
-		}
-	}
-
-	
-	/* Combo Method to aim and move robot towards peg	*/
-	public void comboAimRobot() { 
-
-		double targetDistanceFromWall = 14.0;
-		getDistanceClose();
-		int targetX = 640/2;
-		int targetY = 480/2;
-		int range = 10;
-
-		while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
-			getPegCoordinates(); 						// Updates the x & y values of the "Peg"
-			getDistanceClose();  			//Updates distance/Value
-
-			if(pegX < (targetX - range)) { 
-				strafeLeftAtSpeed(0.3);
-			}
-			else if (pegX > (targetX + range)) {
-				strafeRightAtSpeed(0.3);
-			}else{
-				goForwardAtSpeed(0.3);
-			}
-		}
-	}
-
-
-
-	/* this method places a gear on a peg -Shivanie H	*/
-	public void comboPlacePeg() {
-
-
-
-
-
-	}		
-
-	
-	
-
 	/* ------------------------------------------------------------------------------------*/
 	/* BASIC DRIVETRAIN FUNCTIONS */
 
@@ -646,27 +657,85 @@ public void changeExposure(){
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
 
-	//method to turn to a specific field-orientation -Malachi & Ahmed
-	public void turnRobotAngle(int angle){
-		//robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
-		
+
+	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
+	public void turnRobotAngleInit(){
+
+		final double kP = 0.03;
+		final double kI = 0.00;
+		final double kD = 0.00;
+		final double kF = 0.00;
+		final double kToleranceDegrees = 2.0f;	//how on target the pidloop needs to be
+
+		ninjaController = new PIDController(kP, kI, kD, kF, ahrs, this);
+		ninjaController.setInputRange(-180.0f,  180.0f);
+		ninjaController.setOutputRange(-1.0, 1.0);
+		ninjaController.setAbsoluteTolerance(kToleranceDegrees);
+		ninjaController.setContinuous(true);
+
+		LiveWindow.addActuator("DriveSystem", "RotateController", ninjaController);
+
 	}
-	
-	
-	
-	
+
+	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
+	public void turnRobotAngle(float angle){
+
+		turnRobotAngleInit();
+		boolean rotateToAngle = false;
+
+		if (driverStick.getRawButton(B_BUTTON)){
+			ahrs.reset();
+		}
+
+		if(driverStick.getRawButton(A_BUTTON)){
+			ninjaController.setSetpoint(0.0f);
+			rotateToAngle = true;
+		} else if(driverStick.getRawButton(RB_BUTTON)){
+			ninjaController.setSetpoint(90.0f);
+			rotateToAngle = true;
+		} else if(driverStick.getRawButton(LB_BUTTON)){
+			ninjaController.setSetpoint(179.9f);
+			rotateToAngle = true;
+		} else if(driverStick.getRawButton(LB_BUTTON)){
+			ninjaController.setSetpoint(-90.0f);
+			rotateToAngle = true;
+		}
+
+		double currentRotationRate = 0;
+		if(rotateToAngle == true){
+			ninjaController.enable();
+			currentRotationRate = rotateToAngleRate;
+		}else {
+			ninjaController.disable();
+		}
+
+		try {
+			robotDrive.mecanumDrive_Cartesian(0,0,currentRotationRate, ahrs.getAngle());
+		} catch( RuntimeException ex ) {
+			DriverStation.reportError("Error communicating with drive system:  " + ex.getMessage(), true);
+		}    
+
+	}
+
+	@Override
+	/* This function is invoked periodically by the PID Controller, */
+	/* based upon navX-MXP yaw angle input and PID Coefficients.    */
+	public void pidWrite(double output) {
+		rotateToAngleRate = output;
+	}
+
+
 	/* ------------------------------------------------------------------------------------*/
 	/* COMBO AUTONOMOUS METHODS */
 
 	public void strategyDestinationPin (Timer timerAuto){
 
-
 	}
 
 	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
-		double timerA = timerAuto.get();
-		if(timerA < 2) {
+		double timeA = timerAuto.get();
+		if(timeA < 2) {
 			goForwardAtSpeed(0.3);
 		}
 		else{
@@ -676,27 +745,91 @@ public void changeExposure(){
 
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
-		double timerA = timerAuto.get();
+		double timeB = timerAuto.get();
 
-		if(timerA < 2.0) {
+		if(timeB < 2.0) {
 			goForwardAtSpeed(0.3);
-		}else if(timerA < 3.0){
+		}else if(timeB < 3.0){
 			turnRightAtSpeed(0.3);
-		} else if (timerA < 4.0){ 
+		} else if (timeB < 4.0){ 
 			goForwardAtSpeed(0.3);
-		} else if (timerA < 5.0){
+		} else if (timeB < 5.0){
 			//placePeg();
-		} else if (timerA < 6.0) {
+		} else if (timeB < 6.0) {
 			goBackwardAtSpeed(0.3);
-		} else if(timerA < 7.0) {
+		} else if(timeB < 7.0) {
 			turnLeftAtSpeed(0.3);
-		} else if (timerA < 8.0){
+		} else if (timeB < 8.0){
 			goForwardAtSpeed(0.3);
 		} else{
 			stopDrive();
 		}			
 
 	}		
+
+
+	/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
+	public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
+		
+		double timeC = timerAuto.get();
+		
+		// Numbers are open to edits
+		if (timeC < 3.0) {
+			holdGear();
+			goForwardAtSpeed(0.3);
+		} else if (timeC > 3.0 && timeC <= 4.0) {
+			stopDrive();
+			//turnRobotAngle(30);
+		} else if (timeC > 4.0 && timeC < 15.0) {
+			/// dead reckoning 
+			goForwardAtSpeed(0.3);
+			//120 inches
+			/*
+			// if ultra sonic is between 15 inches and 18 inches stop
+			// other than that the values should always give you greater than 18
+			// or -1
+			if (((getDistanceShort() > 18) || getDistanceShort() == -1) && time < 12.0) {
+				goForwardAtSpeed(.3);
+			} else {
+				stopDrive();
+				if (timeC > 12.0 && timeC < 14.0)
+					rotateUp();
+				goForwardAtSpeed(.3);
+				dropGear();
+				// place the peg method
+			}*/
+		} else {
+			stopDrive();
+		}
+
+	}
+
+	/* Auto strategy for front peg if camera is not working	-Ahmed	*/
+	public void runAutoStrategy_noCamFrontPeg(Timer timerAuto){
+		
+		double timeD = timerAuto.get();
+		
+		if (timeD <4.0){
+			holdGear();
+			goForwardAtSpeed(.3);
+		} else if (timeD < 7.0){
+			//stopDrive();
+			strafeRightAtSpeed(0.3);
+		} else if (timeD < 10.0){
+			//stopDrive();
+			turnRobotAngle(180);
+		} else if (timeD < 12.0){
+			rotateUp();
+		} else if(timeD < 14.0){
+			goForwardAtSpeed(.3);
+		} else{
+			stopDrive();
+		}
+	}
+
+
+
+
 
 
 
