@@ -29,7 +29,7 @@ UsbCamera camera;
 		camera.setFPS(30);
 		camera.setWhiteBalanceAuto();
 		//camera.setExposureManual(value);
-
+//dsjadasjdasn
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 			try{
 				int tempNumRectangles = pipeline.filterContoursOutput().size();
