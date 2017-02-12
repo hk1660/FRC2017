@@ -21,7 +21,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.SensorBase;
 import edu.wpi.first.wpilibj.Relay;
-
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.DriverStation;
 
 public class Robot extends SampleRobot {
 
@@ -31,6 +33,9 @@ public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	HKcam hkcam;
 	boolean gyroFlag = false;
+	boolean ninjaFlag = false;
+	PIDController ninjaController;
+	double rotateToAngleRate;
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -78,6 +83,11 @@ public class Robot extends SampleRobot {
 	final int POV_LEFT = 270;
 	final int POV_DOWN = 180;
 	final int POV_RIGHT = 90;
+	 static final double kP = 0.03;
+	 static final double kI = 0.00;
+	 static final double kD = 0.00;
+	 static final double kF = 0.00;
+	 static final double kToleranceDegrees = 2.0f;
 
 	Joystick driverStick = new Joystick(0);
 	Joystick manipStick = new Joystick(1);
@@ -111,14 +121,14 @@ public class Robot extends SampleRobot {
 		} catch (RuntimeException ex ) {
 			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 		}
-
+		
 	}
 
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
 
 		hkcam = new HKcam();
-		hkcam.camInit();
+		//hkcam.camInit();
 
 		//CHOOSING AUTO MODE
 		startingPosition = new SendableChooser();
@@ -180,7 +190,7 @@ public class Robot extends SampleRobot {
 
 			/* Gear Placing commands		*/
 			//getPegCoordinates();
-			getDistanceFar();
+			getDistanceFar(); 
 			getDistanceClose();
 			//placePeg();
 			
@@ -222,10 +232,10 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber("strafe",	strafe);
 		SmartDashboard.putNumber("angle",	angle);
 
-		if(gyroFlag == true){
+		if(gyroFlag == true && ninjaFlag == false ){
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
 
-		} else {
+		} else if(ninjaFlag == false) {
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
 		}
 	}
@@ -256,11 +266,36 @@ public class Robot extends SampleRobot {
 			stopMiniGears();
 		}
 	}
+	
+	/* joystick method to flip the gyroflag -Malachi P	*/
+	public void checkGyroFlag(){
+		if(driverStick.getRawButton(A_BUTTON)==true){
+			this.turnGyroOn();
+		}
+		if(driverStick.getRawButton(B_BUTTON)==true){
+			this.turnGyroOff();
+		}
+		
+		
+	}
 
+	/* joystick method to flip the ninjaflag to be able to rotate to a specific angle 	-Malachi P & Jamesey E	*/
+	public void checkNinjaFlag(){
+		if(driverStick.getRawButton(X_BUTTON)==true){
+			this.turnNinjaOn();
+			//this.turnRobotAngle(90);
+			this.turnNinjaOff();
+		}
+		
+		
+	}
 
+	
+	
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getRawButton(Y_BUTTON) == true){
+			holdGear();
 			rotateUp();
 		}
 		if(manipStick.getRawButton(X_BUTTON) == true){
@@ -295,16 +330,24 @@ public class Robot extends SampleRobot {
 		}
 	} 
 
+	/*turn gyro based turning on*/
+	  
+	
+	
+	
+	
+	
+	
 	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
-		if(manipStick.getRawAxis(POV_UP)>0.5){
-			this.compressorOff();
-			SmartDashboard.putString("Compressor: ", "OFF-button");
-		}
-		else if(manipStick.getRawAxis(POV_DOWN)>0.5){
+		if(manipStick.getPOV() == POV_UP){
 			this.compressorOn();
 			SmartDashboard.putString("Compressor: ", "ON-button");
+		}
+		else if(manipStick.getPOV() == POV_DOWN){
+			this.compressorOff();
+			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
 		
 	}
@@ -312,7 +355,7 @@ public class Robot extends SampleRobot {
 	/* method to turn automatically turn on/off compressor based on pressure switch	-Jamesey & Donashia	*/
 	public boolean checkCompressorSwitch(){
 		boolean y = pressureSwitch.get();
-		if( pressureSwitch.get() == true) {
+		if( pressureSwitch.get() == false) {
 			compressorOn();
 		} else {
 			compressorOff();
@@ -323,24 +366,20 @@ public class Robot extends SampleRobot {
 
 	
 	/* method to turn robot to 90 degrees	-Malachi P	*/
-	public void checkTurnRobot(){
+	/*public void checkTurnRobot(){
 		if(manipStick.getRawAxis(POV_LEFT)>0.5){
-			//turnRobotGyro(90);
+			turnRobotGyro(90);
 		}
-	}
-
+	}*/
+	 
 	/* Joystick Combo method to pick up a gear-Donashia	*/
 	/*public void checkGear(){
 		
 		if(manipStick.getRawButton(Y_BUTTON) == true){
-			pickUp();
+			
 		
 		}
 			
-			
-		else if(manipStick.getRawButton(X_BUTTON) == false);
-		        putDown();
-		}
 		
 	*/
 	
@@ -445,7 +484,10 @@ public class Robot extends SampleRobot {
 
 	/* method to get the value from a Pneumatic pressure switch	*/
 
+/*public void turnRobotGyro(int angle){
+	robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
 
+}*/
 
 
 
@@ -512,12 +554,25 @@ public class Robot extends SampleRobot {
 	public void turnGyroOff(){
 		gyroFlag = false;
 	}
-
+	public void turnNinjaOn(){
+		ninjaFlag = true;
+	}
+	public void turnNinjaOff(){
+		ninjaFlag = false;
+	}
 
 
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
+	
+	/*public checkComboPickupButtion(){
+		
+		if (driverstic)
+	}
+	
+	*/
+	
 	public void comboPickUp(){
 
 		Timer dd = new Timer();
@@ -610,13 +665,55 @@ public class Robot extends SampleRobot {
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
 
-	//method to turn to a specific field-orientation -Malachi & Ahmed
+	
+	
+	/*	method to turn to a specific field-orientation -Malachi & Ahmed
 	public void turnRobotAngle(int angle){
-		//robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
 		
+		ninjaController = new PIDController(kP, kI, kD, kF, ahrs, this);
+		ninjaController.setInputRange(-180.0f,  180.0f);
+		ninjaController.setOutputRange(-1.0, 1.0);
+		ninjaController.setAbsoluteTolerance(kToleranceDegrees);
+        ninjaController.setContinuous(true);
+
+        LiveWindow.addActuator("DriveSystem", "RotateController", ninjaController);
+
+
+			boolean rotateToAngle = false;
+			if (driverStick.getRawButton(B_BUTTON)){
+				ahrs.reset();
+			}
+			if(driverStick.getRawButton(A_BUTTON)){
+				ninjaController.setSetpoint(0.0f);
+				rotateToAngle = true;
+				}else if(driverStick.getRawButton(RB_BUTTON)){
+					ninjaController.setSetpoint(90.0f);
+					rotateToAngle = true;
+				}else if(driverStick.getRawButton(LB_BUTTON)){
+					ninjaController.setSetpoint(180);
+					rotateToAngle = true;
+				}
+			double currentRotationRate;
+			if(rotateToAngle){
+				ninjaController.enable();
+				//currentRotationRate = rotateToAngle;
+			}else {
+				ninjaController.disable();
+			}
+			
+			
+			
+
+
+        try {
+        	RobotDrive.mecanumDrive_Cartesian(0,0,currentRotationRate. ahrs.getAngle());                                 currentRotationRate, ahrs.getAngle());
+        } catch( RuntimeException ex ) {
+            DriverStation.reportError("Error communicating with drive system:  " + ex.getMessage(), true);
+        }    
+        
 	}
 	
-	
+	*/
 	
 	
 	/* ------------------------------------------------------------------------------------*/
