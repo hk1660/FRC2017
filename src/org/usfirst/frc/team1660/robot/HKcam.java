@@ -39,43 +39,58 @@ public class HKcam {
 		// pipeline.process(camera);
 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
-			while (camRunning) {
+			while (true) {
+
+
+				/*Find the two biggest rectangles --Khalil and Marlahna	*/
+				Rect maxRect1 = new Rect;
+				Rect maxRect2 = new Rect;
 
 				int tempNumRectangles = pipeline.filterContoursOutput().size();
-				
-				Rect tempR0 = r0; //keep old value if you don't see it?
 
-				if (tempNumRectangles > 0){		//!pipeline.filterContoursOutput().isEmpty()) {
+				//check if rec
+				if(  (tempNumRectangles   >= 2) {
 
-					tempR0 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
-					Rect tempR1 = r1;		//keep old value if you don't see it?
 
-					if (tempNumRectangles > 1) {
-						tempR1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
-					}
 
-					synchronized(camLock){
-						r0 = tempR0;
-						r1 = tempR1;
-						numRectangles = tempNumRectangles;
-					}
-					
-					System.out.print ("r0.x: " +r0.x + " r0.y: " +r0.y+ " r0.height: " + r0.height + " r0.width: "+r0.width);
-					SmartDashboard.putNumber("rect0.x", r0.x);
-					SmartDashboard.putNumber("rect0.y", r0.y);
-					SmartDashboard.putNumber("rect0.height", r0.height);
-					SmartDashboard.putNumber("rect0.width", r0.width);
-					
-					System.out.print ("r1.x: " +r1.x + " r1.y: " +r1.y+ " r1.height: " + r1.height + " r1.width: "+r1.width);
-					SmartDashboard.putNumber("rect1.x", r1.x);
-					SmartDashboard.putNumber("rect1.y", r1.y);
-					SmartDashboard.putNumber("rect1.height", r1.height);
-					SmartDashboard.putNumber("rect1.width", r1.width);
+					//storage
+					maxRect1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
+					maxRect2 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
 
-					System.out.println("\t rect count = " + numRectangles);
-					SmartDashboard.putNumber("rect count", numRectangles);
-					
+					//check each element
+					for(int i = 1; i < tempNumRectangles; i++) {
+
+						//Pulls rectangle at current position in the arraylist at pos i
+						Rect temp = Imgproc.boundingRect(pipeline.filterContoursOutput().get(i));
+
+
+						//case1: largest
+						if(temp.area() > maxRect1.area()) {
+
+							maxRect2 = maxRect1;
+							maxRect1 = temp;
+						}
+
+						//case2: 2nd largest
+						else if(temp.area() > maxRect2.area()) {
+
+							maxRect2 = temp;
+						}
+
+
+						//case: trash
+
+
+
+					}	
 				}
+
+				synchronized(camLock){
+					r0 = maxRect1;
+					r1 = maxRect2;
+					numRectangles = tempNumRectangles;
+				}
+			}
 				
 				try {
 				    Thread.sleep(200);

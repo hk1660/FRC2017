@@ -561,7 +561,7 @@ public class Robot extends SampleRobot {
 		ninjaFlag = false;
 	}
 
-
+//jkl
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
