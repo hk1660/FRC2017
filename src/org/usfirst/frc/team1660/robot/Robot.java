@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.DriverStation;
+import java.util.ArrayList;
 
 public class Robot extends SampleRobot {
 
@@ -36,6 +37,7 @@ public class Robot extends SampleRobot {
 	boolean ninjaFlag = false;
 	PIDController ninjaController;
 	double rotateToAngleRate;
+	
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -619,13 +621,7 @@ public class Robot extends SampleRobot {
 
 
 	/* this method places a gear on a peg -Shivanie H	*/
-	public void comboPlacePeg() {
-
-
-
-
-
-	}		
+	
 
 	
 	

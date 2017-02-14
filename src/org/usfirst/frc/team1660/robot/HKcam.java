@@ -39,19 +39,16 @@ public class HKcam {
 		// pipeline.process(camera);
 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
-			while (true) {
 
 
 				/*Find the two biggest rectangles --Khalil and Marlahna	*/
-				Rect maxRect1 = new Rect;
-				Rect maxRect2 = new Rect;
+				Rect maxRect1 = new Rect();
+				Rect maxRect2 = new Rect();
 
 				int tempNumRectangles = pipeline.filterContoursOutput().size();
 
 				//check if rec
-				if(  (tempNumRectangles   >= 2) {
-
-
+				if(  (tempNumRectangles  >= 2)) {
 
 					//storage
 					maxRect1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
@@ -77,10 +74,7 @@ public class HKcam {
 							maxRect2 = temp;
 						}
 
-
 						//case: trash
-
-
 
 					}	
 				}
@@ -90,16 +84,15 @@ public class HKcam {
 					r1 = maxRect2;
 					numRectangles = tempNumRectangles;
 				}
-			}
+			
 				
 				try {
 				    Thread.sleep(200);
 				} catch(InterruptedException e){
 					System.out.println("Thread sleep exception");
 				}
-			}
-		});
 
+	});
 		visionThread.start();
 
 	}
@@ -108,6 +101,7 @@ public class HKcam {
 		synchronized(camLock){
 			return numRectangles;
 		}
+		
 	}
 
 	public Rect getRect0() {
