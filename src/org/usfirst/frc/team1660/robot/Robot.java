@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 
 
-public class Robot extends SampleRobot {
+public class Robot extends SampleRobot implements PIDOutput {
 
 	/* ----------	Robot VARIABLES/FIELDS	--------------------------------------------------------------------------*/
 
@@ -33,7 +33,12 @@ public class Robot extends SampleRobot {
 	HKdrive robotDrive;
 	HKcam hkcam;
 	boolean gyroFlag = false;
+
 	PIDController turnController;
+
+	boolean ninjaFlag = false;
+	PIDController ninjaController;
+
 	double rotateToAngleRate;
 
 	CANTalon frontLeft = new CANTalon(1);
@@ -53,7 +58,8 @@ public class Robot extends SampleRobot {
 	DigitalInput echo = new DigitalInput (9);
 	Ultrasonic ultraSonicShort = new Ultrasonic(trigger,echo);
 	DigitalInput gearDetector = new DigitalInput(0);
-
+	DigitalInput pressureSwitch = new DigitalInput(1);
+	int white=0;
 
 	/* SmartDashboard objects  */
 	SendableChooser startingPosition;
@@ -130,7 +136,6 @@ public class Robot extends SampleRobot {
 
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
-
 		hkcam = new HKcam();
 		hkcam.camInit();
 
@@ -152,10 +157,10 @@ public class Robot extends SampleRobot {
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
-		 robotDrive.drive(-0.5, 0.0);
+		//robotDrive.drive(-0.5, 0.0);
 
-		 Timer.delay(2.0);
-	      robotDrive.drive(0.0, 0.0);
+		//Timer.delay(2.0);
+		//robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
 		 int currentStrategy = (int) strategy.getSelected(); 
@@ -183,20 +188,36 @@ public class Robot extends SampleRobot {
 
 		while (isOperatorControl() && isEnabled()) {
 
-			checkDriving();
-			getGyro();
 
+			
+
+
+			/*Driving commands		*/
+			checkDriving();
+			checkGyroFlag();
+			checkTurnRobotAngle();
+			checkResetGyro();
+			printGyro();
+
+			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
 			checkHockey();
 			checkHova();
-			checkCompressor();
+			//checkCompressor();
+			checkCompressorSwitch();
+			//checkComboPickUpGear();
 
-			checkClimbRope();
+			/* Gear Placing commands		*/
 			//getPegCoordinates();
 			getDistanceFar();
 			getDistanceClose();
-			//placePeg();
+
+			/* Climbing commands	*/
+			checkClimbRope();
+
+			/*Camera Testing		*/
+			changeExposure();
 
 			Timer.delay(0.005); // wait 5ms to avoid hogging CPU cycles
 
@@ -232,11 +253,12 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber("rotate",	rotateValue);
 		SmartDashboard.putNumber("strafe",	strafe);
 		SmartDashboard.putNumber("angle",	angle);
-		
-		if(gyroFlag == true){
+
+
+		if(gyroFlag == true && ninjaFlag == false ){
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
-			
-		} else {
+
+		} else if(ninjaFlag == false) {
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
 		}
 	}
@@ -252,39 +274,51 @@ public class Robot extends SampleRobot {
 
 	/* Joystick method to eat and spit gears on ground	*/
 	public void checkMiniGears() {
-	//	int thresh = .2;
+		//	int thresh = .2;
 		//double x = manipStick.getRawButton(A_BUTTON);
-		
-		if(manipStick.getRawButton(B_BUTTON)==true){
+
+		if(manipStick.getPOV()==this.POV_RIGHT){
 			takeMiniGears();
 		}
-		else if (manipStick.getRawButton(A_BUTTON)==true)
-			{
+		else if (manipStick.getPOV()==this.POV_LEFT)
+		{
 			spitMiniGears();
 		}
-	
+
 		else{
 			stopMiniGears();
 		}
 	}
 
-	public void turnGyroOn(){
-		if (driverStick.getRawButton(A_BUTTON)==true){
-			gyroFlag = true;
+
+
+
+	/* joystick method to flip the gyroflag -Malachi P	*/
+	public void checkGyroFlag(){
+		if(driverStick.getRawButton(B_BUTTON)==true){ 
+			this.turnGyroOn();
 		}
-		
-	}
-	public void turnOffGyro(){
-		if(driverStick.getRawButton(B_BUTTON)==true){
-			gyroFlag = false;
+		if(driverStick.getRawButton(A_BUTTON)==true){
+			this.turnGyroOff();
 		}
 	}
+
+	/* joystick method to flip the ninjaflag to be able to rotate to a specific angle 	-Malachi P & Jamesey E	
+	public void checkNinjaFlag(){
+		if(driverStick.getRawButton(X_BUTTON)==true){
+			this.turnNinjaOn();
+			//this.turnRobotAngle(90);
+			this.turnNinjaOff();
+		}	
+	}*/
+
+
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
-		if(manipStick.getRawButton(Y_BUTTON) == true){
+		if(manipStick.getPOV()==this.POV_UP){
 			rotateUp();
 		}
-		if(manipStick.getRawButton(X_BUTTON) == true){
+		if(manipStick.getPOV()==this.POV_DOWN){
 			rotateDown();
 		}
 	}
@@ -298,20 +332,14 @@ public class Robot extends SampleRobot {
 			dropGear();
 		}
 	}
-	public void checkTurnRobot(){
-		if(manipStick.getRawAxis(POV_LEFT)>0.5){
-			turnRobotGyro(90);
-		}
-	}
 
-	
-
+	/* Joystick method to climb rope	*/
 	public void checkClimbRope(){
-		
+
 		double thresh = 0.2;
 		double upSpeed = manipStick.getRawAxis(LT_AXIS);
 		double downSpeed = manipStick.getRawAxis(RT_AXIS);
-		
+
 		if(upSpeed > thresh){
 			climbUp(upSpeed);
 		} else if(downSpeed > thresh){
@@ -321,128 +349,82 @@ public class Robot extends SampleRobot {
 		}
 	} 
 
-	/*	method to turn compressor on or off	-???	*/
+	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
-		if(manipStick.getPOV() == POV_DOWN){
-			this.compressorOff();
-		}
-		else if(manipStick.getPOV() == POV_UP){
+		if(driverStick.getRawButton(RB_BUTTON)==true){
 			this.compressorOn();
-			
 
+			SmartDashboard.putString("Compressor: ", "ON-button");
+	}
+		else if(driverStick.getRawButton(LB_BUTTON)==true){
+			this.compressorOff();
+			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
-	}
-	/* Joystick Combo method to Pick up a Gear from the Ground -???	*/
-
-
-
-
-	/* Joystick Combo method to place a gear on a peg automatically	*/
-
-
-
-
-
-	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
-
-	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
-	public double getDistanceFar(){
-
-		double x = ultraSonicLong.getAverageVoltage();
-		double distanceInInches = 20*x*x + 2.56*x + 12.45;
-		SmartDashboard.putNumber("Distance (Far)", distanceInInches);
-		return distanceInInches;
 
 	}
-	public double getDistanceClose(){
-		ultraSonicShort.setAutomaticMode(true);
-		double y = ultraSonicShort.getRangeInches();
-		distanceFromWall = y;
-		SmartDashboard.putNumber("Distance (Close)", y);
+
+	/* method to turn automatically turn on/off compressor based on pressure switch	-Jamesey & Donashia	*/
+	public boolean checkCompressorSwitch(){
+		boolean y = pressureSwitch.get();
+		if( pressureSwitch.get() == true) {
+			compressorOn();
+		} else {
+			compressorOff();
+		}
+		SmartDashboard.putString("Compressor: ", y + "-switch");
 		return y;
 	}
 
-	// gearDetector to check if we have a gear, then used to move Hova up
-	public boolean isGear(){
-		boolean gotGear = gearDetector.get();
-		SmartDashboard.putBoolean("gotGear?", gotGear);
-		return gotGear;
+	/*Joystick method to manually adjust the exposure of the camera	-Ahmed A	*/
+	public void changeExposure(){
+
+		if(driverStick.getRawAxis(RT_AXIS)>0.5){
+			white=white+5;
+			if(white>100){
+				white=100;
+			}
+			hkcam.camera.setExposureManual(white);
+		}
+		if(driverStick.getRawAxis(LT_AXIS)>0.5){
+			white=white-5;
+			if(white<0){
+				white=0;
+			}
+			hkcam.camera.setExposureManual(white);
+
+		}
+		SmartDashboard.putNumber("white resolution", white);
 	}
 
-	/*	this method finds the coordinates of the peg -Imani L & Marlahna M	*/
-	public void getPegCoordinates() {
 
-		r0 = hkcam.getRect0();
-		r1 = hkcam.getRect1();
-
-		if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
-
-			SmartDashboard.putNumber("Rec1 X", r1.x );
-			SmartDashboard.putNumber("Rec0 X", r0.x );
-
-			target1x = r0.x + r0.width/2;
-			target1y = r0.y + r0.height/2;
-			target2x = r1.x + r1.width/2;
-			target2y = r1.y + r1.height/2;
-
-			pegX = (target1x + target2x ) /2;
-			pegY = (target1y + target2y ) /2;
-
-			SmartDashboard.putNumber("pegX", pegX);
-			SmartDashboard.putNumber("pegY", pegY);
-
-		} else {
-			SmartDashboard.putString("pegX", "unknown");
-			SmartDashboard.putString("pegY", "unknown");
+	/* method to turn robot to 90 degrees	-Malachi P	*/
+	public void checkTurnRobotAngle(){
+		if(driverStick.getPOV() == POV_LEFT){
+			turnRobotAngle(90);
 		}
 	}
 
+ 
 	/* method to get the angle of the robot from the navX	-Malachi P	*/
-	public void getGyro(){
+	public void checkResetGyro(){
 
 		//Zero the gyro/yaw of the navX
-		if (driverStick.getRawAxis(LT_AXIS) > 0.5) {
+		if (driverStick.getRawButton(Y_BUTTON)) {
 			ahrs.zeroYaw();
-			
 		}
+	}
+			
 
-		/* Display 6-axis Processed Angle Data                                      */
-		SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
-		SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
-		SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
-		SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
-		SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll()); 
+	/* Joystick Combo method to pick up a gear -Donashia	*/
+	public void checkComboPickUpGear(){
+		if(manipStick.getRawButton(Y_BUTTON) == true){
+			this.comboPickUpGear();
 
-		// Display tilt-corrected, Magnetometer-based heading (requires magnetometer calibration to be useful)                                   
-		//SmartDashboard.putNumber(   "IMU_CompassHeading",   ahrs.getCompassHeading());
-
-		// Display 9-axis Heading (requires magnetometer calibration to be useful)  
-		//SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
-
-		// These functions are compatible w/the WPI Gyro Class, providing a simple path for upgrading from the Kit-of-Parts gyro to the navx-MXP            
-		SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle());
-		SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
-
-		// Display Processed Acceleration Data (Linear Acceleration, Motion Detect)        
-		//SmartDashboard.putNumber(   "IMU_Accel_X",          ahrs.getWorldLinearAccelX());
-		//SmartDashboard.putNumber(   "IMU_Accel_Y",          ahrs.getWorldLinearAccelY());
-		//SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-		//SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
-
-		// Omnimount Yaw Axis Information                                           
-		// For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  
-		//AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
-		//SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
-		//SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
-
-		// Sensor Board Information                                                 
-		SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
-
+		}
 	}
 
-
-	/* method to get the value from a Pneumatic pressure switch	*/
+	/* Joystick Combo method to place a gear on a peg automatically	*/
 
 
 
@@ -489,30 +471,72 @@ public class Robot extends SampleRobot {
 		this.climber.set(0.0);
 	}
 
-
-	/* Joystick method to eat and spit gears on ground	*/
-	public void takeMiniGears() {
-			miniGearFRight.set(1.0);
-			miniGearFLeft.set(-1.0);
+	/* basic method to take and spit gears on ground	*/
+	public void takeMiniGears(){
+		miniGearFRight.set(1.0);
+		miniGearFLeft.set(-1.0);
 	}
 	public void spitMiniGears() {
-			miniGearFRight.set(-1.0);
-			miniGearFLeft.set(1.0);
+		miniGearFRight.set(-1.0);
+		miniGearFLeft.set(1.0);
 	}
-public void stopMiniGears(){	
-			miniGearFRight.set(0.0);
-			miniGearFLeft.set(0.0);
+	public void stopMiniGears(){	
+		miniGearFRight.set(0.0);
+		miniGearFLeft.set(0.0);
+	}
+
+	/* basic method to turn gyro-driving on and off	-Malachi P	*/
+	public void turnGyroOn(){
+		gyroFlag = true;
+	}
+	public void turnGyroOff(){
+		gyroFlag = false;
+	}
+
+	/* basic method to flip flag to allow for gyro-based turns	-Malachi P	*/
+	public void turnNinjaOn(){
+		ninjaFlag = true;
+	}
+	public void turnNinjaOff(){
+		ninjaFlag = false;
+	}
+
+
+	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
+
+	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
+	Timer comboPickUpTimer = new Timer();
+	Timer comboPickupTimer2 = new Timer();
+
+	public void comboPickUpGear() {
+		comboPickUpTimer.reset();
+		if (comboPickUpTimer.get() != 0){
+			if(comboPickUpTimer.get() < 5 || !isGear()){
+				takeMiniGears();
+				if(comboPickupTimer2.get() == 0){
+					comboPickupTimer2.start();
+				}
+			}
+			if(comboPickUpTimer.get() > 5.0){
+				comboPickUpTimer.stop();
+				comboPickUpTimer.reset();
+			}
 		}
+		if(comboPickupTimer2.get() < 2){
+			holdGear();
+		}
+		if(comboPickupTimer2.get() > 2 && comboPickupTimer2.get() < 6) {
+			rotateUp();
+		}
+		if(comboPickupTimer2.get() > 6){
+			comboPickupTimer2.reset();
+			comboPickupTimer2.stop();
+		}
+	}
 
 
-
-
-
-
-	/* ----------	COMBO AUTO FUNCTIONS	--------------------------------------------------------------------------*/
-
-	/* AUTO Method to aim and move robot towards peg	*/
-	public void autoAimRobot() { 
+	/* Combo Method to aim and move robot towards peg	*/
+	public void comboAimRobot() { 
 
 		double targetDistanceFromWall = 14.0;
 		getDistanceClose();
@@ -538,19 +562,105 @@ public void stopMiniGears(){
 
 
 	/* this method places a gear on a peg -Shivanie H	*/
-	public void placePeg() {
+	public void comboPlacePeg() {
 
 
 
 
 
 	}		
-public void turnRobotGyro(int angle ){
-	robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle );
-}
+
+
+	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
+
+	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
+	public double getDistanceFar(){
+
+		double x = ultraSonicLong.getAverageVoltage();
+		double distanceInInches = 20*x*x + 2.56*x + 12.45;
+		SmartDashboard.putNumber("Distance (Far)", distanceInInches);
+		return distanceInInches;
+
+	}
+	public double getDistanceClose(){
+		ultraSonicShort.setAutomaticMode(true);
+		ultraSonicShort.setEnabled(true);
+
+		double y = ultraSonicShort.getRangeInches();
+		double  x = ultraSonicShort.getRangeInches();
+		distanceFromWall = y;
+		SmartDashboard.putNumber("Distance (Close)", y);
+		return y;
+	}
+
+	// gearDetector to check if we have a gear, then used to move Hova up
+	public boolean isGear(){
+		boolean gotGear = gearDetector.get();
+		SmartDashboard.putBoolean("gotGear?", gotGear);
+		return gotGear;
+	}
+
+	/*	this method finds the coordinates of the peg -Imani L & Marlahna M	*/
+	public void getPegCoordinates() {
+
+		r0 = hkcam.getRect0();
+		r1 = hkcam.getRect1();
+
+		if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
+
+			target1x = r0.x + r0.width/2;
+			target1y = r0.y + r0.height/2;
+			target2x = r1.x + r1.width/2;
+			target2y = r1.y + r1.height/2;
+
+			pegX = (target1x + target2x ) /2;
+			pegY = (target1y + target2y ) /2;
+		}
+	}
+
+	/* method to get the angle of the robot from the navX	-Malachi P	*/
+	public void printGyro(){
+
+		//Zero the gyro/yaw of the navX
+	
+
+		/* Display 6-axis Processed Angle Data                                      */
+		SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
+		SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+		SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
+		SmartDashboard.putNumber(   "IMU_Pitch",            ahrs.getPitch());
+		SmartDashboard.putNumber(   "IMU_Roll",             ahrs.getRoll()); 
+
+		// Display tilt-corrected, Magnetometer-based heading (requires magnetometer calibration to be useful)                                   
+		//SmartDashboard.putNumber(   "IMU_CompassHeading",   ahrs.getCompassHeading());
+
+		// Display 9-axis Heading (requires magnetometer calibration to be useful)  
+		//SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+
+		// These functions are compatible w/the WPI Gyro Class, providing a simple path for upgrading from the Kit-of-Parts gyro to the navx-MXP            
+		SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle());
+		SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
+
+		// Display Processed Acceleration Data (Linear Acceleration, Motion Detect)        
+		//SmartDashboard.putNumber(   "IMU_Accel_X",          ahrs.getWorldLinearAccelX());
+		//SmartDashboard.putNumber(   "IMU_Accel_Y",          ahrs.getWorldLinearAccelY());
+		//SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
+		//SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+
+		// Omnimount Yaw Axis Information                                           
+		// For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  
+		//AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+		//SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+		//SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+
+		// Sensor Board Information                                                 
+		SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
+
+	}
+
 
 	/* ------------------------------------------------------------------------------------*/
-	/* BASE AUTO FUNCTIONS */
+	/* BASIC DRIVETRAIN FUNCTIONS */
 
 	public void goForwardAtSpeed(double speed) {
 		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
@@ -584,18 +694,82 @@ public void turnRobotGyro(int angle ){
 		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
 	}
 
+
+	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
+	public void turnRobotAngleInit(){
+
+		final double kP = 0.03;
+		final double kI = 0.00;
+		final double kD = 0.00;
+		final double kF = 0.00;
+		final double kToleranceDegrees = 2.0f;	//how on target the pidloop needs to be
+
+		ninjaController = new PIDController(kP, kI, kD, kF, ahrs, this);
+		ninjaController.setInputRange(-180.0f,  180.0f);
+		ninjaController.setOutputRange(-1.0, 1.0);
+		ninjaController.setAbsoluteTolerance(kToleranceDegrees);
+		ninjaController.setContinuous(true);
+
+		LiveWindow.addActuator("DriveSystem", "RotateController", ninjaController);
+
+	}
+
+	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
+	public void turnRobotAngle(float angle){
+
+		turnRobotAngleInit();
+		boolean rotateToAngle = false;
+
+		
+		if(driverStick.getPOV()==this.POV_UP){
+			ninjaController.setSetpoint(0.0f);
+			rotateToAngle = true;
+		} else if(driverStick.getPOV()==this.POV_LEFT){
+			ninjaController.setSetpoint(90.0f);
+			rotateToAngle = true;
+		} else if(driverStick.getPOV()==this.POV_DOWN){
+			ninjaController.setSetpoint(179.9f);
+			rotateToAngle = true;
+		} else if(driverStick.getPOV()==this.POV_RIGHT){
+			ninjaController.setSetpoint(-90.0f);
+			rotateToAngle = true;
+		}
+
+		double currentRotationRate = 0;
+		if(rotateToAngle == true){
+			ninjaController.enable();
+			currentRotationRate = rotateToAngleRate;
+		}else {
+			ninjaController.disable();
+		}
+
+		try {
+			robotDrive.mecanumDrive_Cartesian(0,0,currentRotationRate, ahrs.getAngle());
+		} catch( RuntimeException ex ) {
+			DriverStation.reportError("Error communicating with drive system:  " + ex.getMessage(), true);
+		}    
+
+	}
+
+	@Override
+	/* This function is invoked periodically by the PID Controller, */
+	/* based upon navX-MXP yaw angle input and PID Coefficients.    */
+	public void pidWrite(double output) {
+		rotateToAngleRate = output;
+	}
+
+
 	/* ------------------------------------------------------------------------------------*/
 	/* COMBO AUTONOMOUS METHODS */
 
 	public void strategyDestinationPin (Timer timerAuto){
 
-
 	}
 
 	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
-		double timerA = timerAuto.get();
-		if(timerA < 2) {
+		double timeA = timerAuto.get();
+		if(timeA < 2) {
 			goForwardAtSpeed(0.3);
 		}
 		else{
@@ -605,27 +779,98 @@ public void turnRobotGyro(int angle ){
 
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
-		double timerA = timerAuto.get();
+		double timeB = timerAuto.get();
 
-		if(timerA < 2.0) {
+		if(timeB < 2.0) {
 			goForwardAtSpeed(0.3);
-		}else if(timerA < 3.0){
+		}else if(timeB < 3.0){
 			turnRightAtSpeed(0.3);
-		} else if (timerA < 4.0){ 
+		} else if (timeB < 4.0){ 
 			goForwardAtSpeed(0.3);
-		} else if (timerA < 5.0){
-			placePeg();
-		} else if (timerA < 6.0) {
+		} else if (timeB < 5.0){
+			//placePeg();
+		} else if (timeB < 6.0) {
 			goBackwardAtSpeed(0.3);
-		} else if(timerA < 7.0) {
+		} else if(timeB < 7.0) {
 			turnLeftAtSpeed(0.3);
-		} else if (timerA < 8.0){
+		} else if (timeB < 8.0){
 			goForwardAtSpeed(0.3);
 		} else{
 			stopDrive();
 		}			
+
 	}
-}
+
+	}		
+
+
+	/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
+	/*public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
+		
+		double timeC = timerAuto.get();
+		
+		// Numbers are open to edits
+		if (timeC < 3.0) {
+			holdGear();
+			goForwardAtSpeed(0.3);
+		} else if (timeC > 3.0 && timeC <= 4.0) {
+			stopDrive();
+			//turnRobotAngle(30);
+		} else if (timeC > 4.0 && timeC < 15.0) {
+			/// dead reckoning 
+			goForwardAtSpeed(0.3);
+			//120 inches
+			/*
+			// if ultra sonic is between 15 inches and 18 inches stop
+			// other than that the values should always give you greater than 18
+			// or -1
+			if (((getDistanceShort() > 18) || getDistanceShort() == -1) && time < 12.0) {
+				goForwardAtSpeed(.3);
+			} else {
+				stopDrive();
+				if (timeC > 12.0 && timeC < 14.0)
+					rotateUp();
+				goForwardAtSpeed(.3);
+				dropGear();
+				// place the peg method
+			}*/
+		/*} else {
+			stopDrive();
+		}
+
+	}
+	*/
+
+	/* Auto strategy for front peg if camera is not working	-Ahmed	*/
+/*	public void runAutoStrategy_noCamFrontPeg(Timer timerAuto){
+		
+		double timeD = timerAuto.get();
+		
+		if (timeD <4.0){
+			holdGear();
+			goForwardAtSpeed(.3);
+		} else if (timeD < 7.0){
+			//stopDrive();
+			strafeRightAtSpeed(0.3);
+		} else if (timeD < 10.0){
+			//stopDrive();
+			turnRobotAngle(180);
+		} else if (timeD < 12.0){
+			rotateUp();
+		} else if(timeD < 14.0){
+			goForwardAtSpeed(.3);
+		} else{
+			stopDrive();
+		}
+	}*/
+
+
+
+
+
+
+
+
 
 
 
