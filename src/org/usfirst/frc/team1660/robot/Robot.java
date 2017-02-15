@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.SensorBase;
 import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
-import java.util.ArrayList;
 
 public class Robot extends SampleRobot implements PIDOutput {
 
@@ -36,7 +35,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 	boolean ninjaFlag = false;
 	PIDController ninjaController;
 	double rotateToAngleRate;
-	PIDController turnController;
 
 	CANTalon frontLeft = new CANTalon(1);
 	CANTalon rearLeft = new CANTalon(2);
@@ -119,12 +117,9 @@ public class Robot extends SampleRobot implements PIDOutput {
 		}
 	}
 
-	/*public void test(){
-		rotateToAngleRate = output;
-	}*/
-
 	/* This function is run when the robot is first started up and should be used for any initialization code. */
 	public void robotInit() {
+
 		hkcam = new HKcam();
 		//hkcam.camInit();
 
@@ -146,22 +141,23 @@ public class Robot extends SampleRobot implements PIDOutput {
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
 		robotDrive.setSafetyEnabled(false);
-		//robotDrive.drive(-0.5, 0.0);
-
-		//Timer.delay(2.0);
-		//robotDrive.drive(0.0, 0.0);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
 		int currentStrategy = (int) strategy.getSelected(); 
+
 		while(isAutonomous() && isEnabled()){ 
 
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("match time",timerA);
 			if(currentStrategy == 1) {
-				runAutoStrategy_GoForwardOnly(timerAuto); 
-				// runAutoStrategy_PlaceGearLeftPeg(timerAuto);
-			}  
+				runAutoStrategy_GoForwardOnly(timerAuto);
+			} else if (currentStrategy == 2) {
+				//this.runAutoStrategy_PlaceGearLeftPeg(timerAuto);
+				//this.runAutoStrategy_noCamFrontPeg(timerAuto);
+				//this.runAutoStratgy_noCamSidePeg(timerAuto);
 
+
+			}
 		}
 	}
 
@@ -171,7 +167,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 		robotDrive.setSafetyEnabled(true);
 
 		while (isOperatorControl() && isEnabled()) {
-
 
 			/*Driving commands		*/
 			checkDriving();
@@ -189,10 +184,13 @@ public class Robot extends SampleRobot implements PIDOutput {
 			checkCompressorSwitch();
 			//checkComboPickUpGear();
 
+
 			/* Gear Placing commands		*/
 			//getPegCoordinates();
 			getDistanceFar(); 
 			getDistanceClose();
+			//checkComboAimRobot();
+			//checkComboPlaceGear()
 
 			/* Climbing commands	*/
 			checkClimbRope();
@@ -252,20 +250,24 @@ public class Robot extends SampleRobot implements PIDOutput {
 		}
 	}
 
+	/* method to reset the angle of the robot from the navX	-Malachi P	*/
+	public void checkResetGyro(){
+
+		//Zero the gyro/yaw of the navX
+		if (driverStick.getRawButton(Y_BUTTON)) {
+			ahrs.zeroYaw();
+		}
+	}
+
 	/* Joystick method to eat and spit gears on ground	*/
 	public void checkMiniGears() {
-		//	int thresh = .2;
-		//double x = manipStick.getRawButton(A_BUTTON);
+		double thresh = 0.2;
 
-		if(manipStick.getPOV()==this.POV_RIGHT){
+		if(manipStick.getRawAxis(LEFT_Y_AXIS) > thresh){
 			takeMiniGears();
-		}
-		else if (manipStick.getPOV()==this.POV_LEFT)
-		{
+		} else if (manipStick.getRawAxis(LEFT_Y_AXIS) < -thresh){
 			spitMiniGears();
-		}
-
-		else{
+		} else {
 			stopMiniGears();
 		}
 	}
@@ -280,15 +282,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 		}
 	}
 
-	/* joystick method to flip the ninjaflag to be able to rotate to a specific angle 	-Malachi P & Jamesey E	
-	public void checkNinjaFlag(){
-		if(driverStick.getRawButton(X_BUTTON)==true){
-			this.turnNinjaOn();
-			//this.turnRobotAngle(90);
-			this.turnNinjaOff();
-		}	
-	}*/
-
 
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
@@ -302,10 +295,10 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 	/* Joystick method to grab and ungrab the gears with the hockey-stick shaped claw -imani l */
 	public void checkHockey(){
-		if(manipStick.getRawButton(LB_BUTTON) == true){
+		if(manipStick.getPOV() == this.POV_LEFT){
 			holdGear();
 		}
-		if(manipStick.getRawButton(RB_BUTTON) == true){
+		if(manipStick.getPOV() == this.POV_RIGHT){
 			dropGear();
 		}
 	}
@@ -315,33 +308,25 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 		double thresh = 0.2;
 		double upSpeed = manipStick.getRawAxis(LT_AXIS);
-		double downSpeed = manipStick.getRawAxis(RT_AXIS);
+		//double downSpeed = manipStick.getRawAxis(RT_AXIS);	//Don't allow robot to backdrive the ratchet
 
 		if(upSpeed > thresh){
 			climbUp(upSpeed);
-		} else if(downSpeed > thresh){
+			//} else if(downSpeed > thresh){
 			//climbDown(downSpeed);
 		} else {
 			dontClimb();
 		}
 	} 
 
-	/*turn gyro based turning on*/
-
-
-
-
-
-
-
 	/*	method to turn compressor on or off	-Malachi P	*/
 	public void checkCompressor(){
 
-		if(driverStick.getRawButton(RB_BUTTON)==true){
+		if(driverStick.getRawAxis(this.RT_AXIS) > 0.5){
 			this.compressorOn();
 			SmartDashboard.putString("Compressor: ", "ON-button");
 		}
-		else if(driverStick.getRawButton(LB_BUTTON)==true){
+		else if(driverStick.getRawAxis(this.LT_AXIS) > 0.5){
 			this.compressorOff();
 			SmartDashboard.putString("Compressor: ", "OFF-button");
 		}
@@ -362,15 +347,15 @@ public class Robot extends SampleRobot implements PIDOutput {
 	/*Joystick method to manually adjust the exposure of the camera	-Ahmed A	*/
 	public void changeExposure(){
 
-		if(driverStick.getRawAxis(RT_AXIS)>0.5){
-			white=white+5;
-			if(white>100){
-				white=100;
+		if(driverStick.getRawButton(RB_BUTTON) == true){
+			white=white+1;
+			if(white>90){
+				white=90;
 			}
 			hkcam.camera.setExposureManual(white);
 		}
-		if(driverStick.getRawAxis(LT_AXIS)>0.5){
-			white=white-5;
+		if(driverStick.getRawButton(LB_BUTTON) == true){
+			white=white-1;
 			if(white<0){
 				white=0;
 			}
@@ -381,27 +366,34 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 
-	/* method to turn robot to 90 degrees	-Malachi P
+	/* method to turn robot to different angles automatically	-Malachi P */
 	public void checkTurnRobotAngle(){
-		if(driverStick.getPOV() == POV_LEFT){
-			turnRobotAngle(90);
-		}
-	}*/
 
-	/* Joystick Combo method to pick up a gear-Donashia	*/
-	/*public void checkGear(){
+		//complete once turnRobotAngle() method works!
 
+	}
+
+
+	/* Joystick Combo method to pick up a gear -Donashia	*/
+	public void checkComboPickUpGear(){
 		if(manipStick.getRawButton(Y_BUTTON) == true){
-
-
+			this.comboPickUpGear();
 		}
-	 */
+	}
 
+	/* Joystick combo method to aim robot driving towards peg	*/
+	public void checkComboAimRobot(){
+		if(manipStick.getRawButton(X_BUTTON) == true){
+			comboAimRobot();
+		}
+	}	
 
 	/* Joystick Combo method to place a gear on a peg automatically	*/
-
-
-
+	public void checkComboPlaceGear(){
+		if(manipStick.getRawButton(A_BUTTON) == true){
+			comboPlaceGear();
+		}
+	}
 
 
 
@@ -450,35 +442,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 			pegY = (target1y + target2y ) /2;
 		}
 	}
-
-
-
-	/* method to get the angle of the robot from the navX	-Malachi P	*/
-	public void checkResetGyro(){
-
-		//Zero the gyro/yaw of the navX
-		if (driverStick.getRawButton(Y_BUTTON)) {
-			ahrs.zeroYaw();
-		}
-	}
-
-
-	/* Joystick Combo method to pick up a gear -Donashia	*/
-	public void checkComboPickUpGear(){
-		if(manipStick.getRawButton(Y_BUTTON) == true){
-			this.comboPickUpGear();
-
-		}
-	}
-
-	/* Joystick Combo method to place a gear on a peg automatically	
-
-	public void turnRobotGyro(int angle){
-		robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
-	}
-	 */
-
-
 
 
 	/* ----------	BASIC ROBOT FUNCTIONALITY METHODS	--------------------------------------------------------------------------*/
@@ -547,12 +510,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-
-	/*public checkComboPickupButtion(){
-
-	}
-	 */
-
 	Timer comboPickUpTimer = new Timer();
 	Timer comboPickupTimer2 = new Timer();
 
@@ -610,7 +567,10 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 
 	/* this method places a gear on a peg -Shivanie H	*/
+	public void comboPlaceGear(){
 
+
+	}
 
 
 
@@ -650,7 +610,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		//SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
 
 		// Sensor Board Information                                                 
-		SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
+		//SmartDashboard.putString(   "NavX FirmwareVersion",      ahrs.getFirmwareVersion());
 
 	}
 
@@ -691,49 +651,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 
-	/*	method to turn to a specific field-orientation -Malachi & Ahmed
-	public void turnRobotAngle(int angle){
-
-		ninjaController = new PIDController(kP, kI, kD, kF, ahrs, this);
-		ninjaController.setInputRange(-180.0f,  180.0f);
-		ninjaController.setOutputRange(-1.0, 1.0);
-		ninjaController.setAbsoluteTolerance(kToleranceDegrees);
-        ninjaController.setContinuous(true);
-
-        LiveWindow.addActuator("DriveSystem", "RotateController", ninjaController);
-
-
-			boolean rotateToAngle = false;
-			if (driverStick.getRawButton(B_BUTTON)){
-				ahrs.reset();
-			}
-			if(driverStick.getRawButton(A_BUTTON)){
-				ninjaController.setSetpoint(0.0f);
-				rotateToAngle = true;
-				}else if(driverStick.getRawButton(RB_BUTTON)){
-					ninjaController.setSetpoint(90.0f);
-					rotateToAngle = true;
-				}else if(driverStick.getRawButton(LB_BUTTON)){
-					ninjaController.setSetpoint(180);
-					rotateToAngle = true;
-				}
-			double currentRotationRate;
-			if(rotateToAngle){
-				ninjaController.enable();
-				//currentRotationRate = rotateToAngle;
-			}else {
-				ninjaController.disable();
-			}
-
-        try {
-        	RobotDrive.mecanumDrive_Cartesian(0,0,currentRotationRate. ahrs.getAngle());                                 currentRotationRate, ahrs.getAngle());
-        } catch( RuntimeException ex ) {
-            DriverStation.reportError("Error communicating with drive system:  " + ex.getMessage(), true);
-        }    
-
-	 */
-
-
 	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
 	public void turnRobotAngleInit(){
 
@@ -750,16 +667,13 @@ public class Robot extends SampleRobot implements PIDOutput {
 		ninjaController.setContinuous(true);
 
 		LiveWindow.addActuator("DriveSystem", "RotateController", ninjaController);
-
 	}
-
 
 	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
 	public void turnRobotAngle(float angle){
 
 		turnRobotAngleInit();
 		boolean rotateToAngle = false;
-
 
 		if(driverStick.getPOV()==this.POV_UP){
 			ninjaController.setSetpoint(0.0f);
@@ -841,11 +755,8 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 	}
 
-}		
-
-
-/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
-/*public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
+	/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
+	public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
 
 		double timeC = timerAuto.get();
 
@@ -860,11 +771,10 @@ public class Robot extends SampleRobot implements PIDOutput {
 			/// dead reckoning 
 			goForwardAtSpeed(0.3);
 			//120 inches
-			/*
+
 			// if ultra sonic is between 15 inches and 18 inches stop
-			// other than that the values should always give you greater than 18
-			// or -1
-			if (((getDistanceShort() > 18) || getDistanceShort() == -1) && time < 12.0) {
+			// other than that the values should always give you greater than 18 or -1
+			if ((getDistanceClose() > 18 || getDistanceClose() == -1) && timeC < 12.0) {
 				goForwardAtSpeed(.3);
 			} else {
 				stopDrive();
@@ -873,16 +783,16 @@ public class Robot extends SampleRobot implements PIDOutput {
 				goForwardAtSpeed(.3);
 				dropGear();
 				// place the peg method
-			}*/
-/*} else {
+			}
+		} else {
 			stopDrive();
 		}
 
 	}
- */
 
-/* Auto strategy for front peg if camera is not working	-Ahmed	*/
-/*	public void runAutoStrategy_noCamFrontPeg(Timer timerAuto){
+
+	/* Auto strategy for front peg if camera is not working	-Ahmed	*/
+	public void runAutoStrategy_noCamFrontPeg(Timer timerAuto){
 
 		double timeD = timerAuto.get();
 
@@ -902,4 +812,10 @@ public class Robot extends SampleRobot implements PIDOutput {
 		} else{
 			stopDrive();
 		}
-	}*/
+	}
+
+
+
+
+
+}

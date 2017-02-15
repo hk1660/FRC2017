@@ -24,10 +24,7 @@ public class HKcam {
 
 	public void camInit() {
 
-		// NetworkTable.setIPAddress("10.16.60.63");
-		// table = NetworkTable.getTable("marly");
-
-		/* Creates UsbCamera and MjpegServer [1] and connects them */
+		/* Constructs UsbCamera and MjpegServer [1] and connects them */
 		camera = CameraServer.getInstance().startAutomaticCapture();
 
 		/* Creates the CvSource and MjpegServer [2] and connects them */
@@ -36,8 +33,7 @@ public class HKcam {
 		/* Creates the CvSink and connects it to the UsbCamera */
 		CvSink cvSink = CameraServer.getInstance().getVideo();
 
-		// pipeline.process(camera);
-
+		/* Constructs the VisionThread which loops between this method and the GripPipeline's process method	*/ 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 
 			/*Find the two biggest rectangles --Khalil and Marlahna	*/
@@ -46,10 +42,10 @@ public class HKcam {
 
 			int tempNumRectangles = pipeline.filterContoursOutput().size();
 
-			//check if rec
+			//check if at least 2 rectangles
 			if(  (tempNumRectangles  >= 2)) {
 
-				//storage
+				//storage for 2 biggest rectangles
 				maxRect1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
 				maxRect2 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
 
@@ -59,37 +55,33 @@ public class HKcam {
 					//Pulls rectangle at current position in the arraylist at pos i
 					Rect temp = Imgproc.boundingRect(pipeline.filterContoursOutput().get(i));
 
-
-					//case1: largest
+					//case1: largest rect
 					if(temp.area() > maxRect1.area()) {
-
 						maxRect2 = maxRect1;
 						maxRect1 = temp;
 					}
 
-					//case2: 2nd largest
+					//case2: 2nd largest rect
 					else if(temp.area() > maxRect2.area()) {
-
 						maxRect2 = temp;
 					}
 
-					//case: trash
+					//case3: rect is trash
 
 				}	
 			}
+			
 			synchronized(camLock){
 				r0 = maxRect1;
 				r1 = maxRect2;
 				numRectangles = tempNumRectangles;
 			}
 
-
 			try {
 				Thread.sleep(200);
 			} catch(InterruptedException e){
 				System.out.println("Thread sleep exception");
 			}
-
 		});
 		visionThread.start();
 
