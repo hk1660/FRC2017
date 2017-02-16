@@ -36,6 +36,8 @@ public class HKcam {
 		/* Constructs the VisionThread which loops between this method and the GripPipeline's process method	*/ 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
 
+			
+			
 			/*Find the two biggest rectangles --Khalil and Marlahna	*/
 			Rect maxRect1 = new Rect();
 			Rect maxRect2 = new Rect();
@@ -44,6 +46,8 @@ public class HKcam {
 
 			//check if at least 2 rectangles
 			if(  (tempNumRectangles  >= 2)) {
+				
+				System.out.println(tempNumRectangles);
 
 				//storage for 2 biggest rectangles
 				maxRect1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
@@ -51,18 +55,21 @@ public class HKcam {
 
 				//check each element
 				for(int i = 1; i < tempNumRectangles; i++) {
+					System.out.println("HELLO");
 
 					//Pulls rectangle at current position in the arraylist at pos i
 					Rect temp = Imgproc.boundingRect(pipeline.filterContoursOutput().get(i));
 
 					//case1: largest rect
 					if(temp.area() > maxRect1.area()) {
+						System.out.println("Hello");
 						maxRect2 = maxRect1;
 						maxRect1 = temp;
 					}
 
 					//case2: 2nd largest rect
 					else if(temp.area() > maxRect2.area()) {
+						System.out.println("Hello");
 						maxRect2 = temp;
 					}
 
@@ -84,6 +91,7 @@ public class HKcam {
 			}
 		});
 		visionThread.start();
+		camPrints();
 
 	}
 

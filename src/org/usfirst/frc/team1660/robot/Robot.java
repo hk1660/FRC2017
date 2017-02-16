@@ -121,7 +121,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 	public void robotInit() {
 
 		hkcam = new HKcam();
-		//hkcam.camInit();
+		hkcam.camInit();
 
 		//CHOOSING AUTO MODE
 		startingPosition = new SendableChooser();
@@ -282,11 +282,11 @@ public class Robot extends SampleRobot implements PIDOutput {
 		}
 	}
 
-
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getPOV()==this.POV_UP){
 			rotateUp();
+			
 		}
 		if(manipStick.getPOV()==this.POV_DOWN){
 			rotateDown();
@@ -406,16 +406,17 @@ public class Robot extends SampleRobot implements PIDOutput {
 		double distanceInInches = 20*x*x + 2.56*x + 12.45;
 		SmartDashboard.putNumber("Distance (Far)", distanceInInches);
 		return distanceInInches;
-
 	}
 	public double getDistanceClose(){
+		
 		ultraSonicShort.setAutomaticMode(true);
 		ultraSonicShort.setEnabled(true);
 		double y = ultraSonicShort.getRangeInches();
 		double  x = ultraSonicShort.getRangeInches();
 		distanceFromWall = y;
-		SmartDashboard.putNumber("Distance (Close)", y);
+		SmartDashboard.putNumber("Real Distance", y);
 		return y;
+		
 	}
 
 	// gearDetector to check if we have a gear, then used to move Hova up
@@ -475,9 +476,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 	/* basic climb method	*/
 	public void climbUp(double x){
-		this.climber.set(x);
-	}
-	public void climbDown(double x){
 		this.climber.set(-x);
 	}
 	public void dontClimb(){
