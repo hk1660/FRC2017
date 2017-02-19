@@ -172,6 +172,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 			checkDriving();
 			checkGyroFlag();
 			//checkTurnRobotAngle();
+			checkChangeAngle();
 			checkResetGyro();
 			printGyro();
 
@@ -186,7 +187,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 
 			/* Gear Placing commands		*/
-			//getPegCoordinates();
+			//getPegX();
 			getDistanceFar(); 
 			getDistanceClose();
 			//checkComboAimRobot();
@@ -286,7 +287,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 	public void checkHova(){
 		if(manipStick.getPOV()==this.POV_UP){
 			rotateUp();
-			
+
 		}
 		if(manipStick.getPOV()==this.POV_DOWN){
 			rotateDown();
@@ -365,7 +366,6 @@ public class Robot extends SampleRobot implements PIDOutput {
 		SmartDashboard.putNumber("white resolution", white);
 	}
 
-
 	/* method to turn robot to different angles automatically	-Malachi P */
 	public void checkTurnRobotAngle(){
 
@@ -373,6 +373,13 @@ public class Robot extends SampleRobot implements PIDOutput {
 
 	}
 
+	/* method to change the angle of the robot  -Jamzii */
+	public boolean checkChangeAngle(){
+		if(manipStick.getRawButton(X_BUTTON)==true){
+			this.changeAngle(90);
+		}
+		return manipStick.getRawButton(X_BUTTON);
+	}
 
 	/* Joystick Combo method to pick up a gear -Donashia	*/
 	public void checkComboPickUpGear(){
@@ -408,7 +415,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		return distanceInInches;
 	}
 	public double getDistanceClose(){
-		
+
 		ultraSonicShort.setAutomaticMode(true);
 		ultraSonicShort.setEnabled(true);
 		double y = ultraSonicShort.getRangeInches();
@@ -416,7 +423,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		distanceFromWall = y;
 		SmartDashboard.putNumber("Real Distance", y);
 		return y;
-		
+
 	}
 
 	// gearDetector to check if we have a gear, then used to move Hova up
@@ -426,22 +433,26 @@ public class Robot extends SampleRobot implements PIDOutput {
 		return gotGear;
 	}
 
-	/*	this method finds the coordinates of the peg -Imani L & Marlahna M	*/
-	public void getPegCoordinates() {
+	/*	this method finds the coordinates of the peg -Imani L & Marlahna M	 & Jamesey */
+	public int getPegX() {
 
-		r0 = hkcam.getRect0();
-		r1 = hkcam.getRect1();
+		int leftX = hkcam.getLeftMost();
+		int rightX = hkcam.getRightMost();
 
-		if(hkcam.getNumRectangles() > 1){ //make sure we see 2 targets
+		if(hkcam.getNumRectangles() > 1){ //make sure we see at least 2 targets
 
-			target1x = r0.x + r0.width/2;
-			target1y = r0.y + r0.height/2;
-			target2x = r1.x + r1.width/2;
-			target2y = r1.y + r1.height/2;
+			//target1x = r0.x + r0.width/2;
+			//target1y = r0.y + r0.height/2;
+			//target2x = r1.x + r1.width/2;
+			//target2y = r1.y + r1.height/2;
 
-			pegX = (target1x + target2x ) /2;
-			pegY = (target1y + target2y ) /2;
+			pegX = (leftX + rightX) /2;
+			//pegY = (target1y + target2y ) /2;
+		} else {
+			pegX = -1;
 		}
+		
+		return pegX;
 	}
 
 
@@ -505,6 +516,37 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 
+	/* method to change the angle of the robot  -Jamzii */
+	public boolean changeAngle(double futureAngle){
+
+		double actualangle = ahrs.getAngle();
+		double angle_tolerance = 5.0;
+		double diff = actualangle - futureAngle;
+
+		double min_speed;
+		if(diff > 0 ){
+			min_speed = 0.4;
+		} else{
+			min_speed = -0.4;
+		}
+
+		double desired_speed = min_speed + (diff / 180) / (1-min_speed);
+
+		System.out.println("CURRENT ANGLE: "+ actualangle + " DIFF IS: "+diff + " DESIRED SPEED IS " + desired_speed);
+
+		if ( Math.abs(diff) > angle_tolerance) {
+			robotDrive.mecanumDrive_Cartesian(0, desired_speed, 0, 0);
+			return false;
+		} else{
+			robotDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+			return true;
+		}
+
+	}
+
+
+
+
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
@@ -548,7 +590,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		int range = 10;
 
 		while(distanceFromWall > targetDistanceFromWall) { //to loop until at acceptable distance (Within Range)
-			getPegCoordinates(); 						// Updates the x & y values of the "Peg"
+			getPegX(); 						// Updates the x & y values of the "Peg"
 			getDistanceClose();  			//Updates distance/Value
 
 			if(pegX < (targetX - range)) { 
@@ -730,27 +772,23 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
-	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
-		double timeB = timerAuto.get();
-
-		if(timeB < 2.0) {
+	public void runAutoStrategy_PlaceGearLeftPeg() {
+		Timer timeB = new Timer();
+		
+		//comboGrabGear();
+		
+		if(timeB.get() < 2.0){
+			goForwardAtSpeed(0.5);
+		} else if(timeB.get() < 5.0) {
+			for(int i = 0; i < 10; i++){
+				changeAngle(60);
+			}
+		} else if(timeB.get()> 5.0 && timeB.get() < 7.0){
 			goForwardAtSpeed(0.3);
-		}else if(timeB < 3.0){
-			turnRightAtSpeed(0.3);
-		} else if (timeB < 4.0){ 
-			goForwardAtSpeed(0.3);
-		} else if (timeB < 5.0){
-			//placePeg();
-		} else if (timeB < 6.0) {
-			goBackwardAtSpeed(0.3);
-		} else if(timeB < 7.0) {
-			turnLeftAtSpeed(0.3);
-		} else if (timeB < 8.0){
-			goForwardAtSpeed(0.3);
-		} else{
-			stopDrive();
-		}			
-
+		} else if (timeB.get() > 7.0 && timeB.get() < 10.0){
+			//comboPlaceGear();
+		}
+		stopDrive();
 	}
 
 	/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
@@ -763,8 +801,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 			holdGear();
 			goForwardAtSpeed(0.3);
 		} else if (timeC > 3.0 && timeC <= 4.0) {
-			stopDrive();
-			//turnRobotAngle(30);
+			changeAngle(30);
 		} else if (timeC > 4.0 && timeC < 15.0) {
 			/// dead reckoning 
 			goForwardAtSpeed(0.3);

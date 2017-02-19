@@ -14,8 +14,10 @@ import java.lang.Thread;
 public class HKcam {
 
 	//FIELDS (initialized to avoid null-pointer exceptions)
-	private Rect r0 = new Rect();
-	private Rect r1 = new Rect();
+	private int vidWidth = 640;
+	private int vidHeight = 480;
+	private int leftMost = -1;
+	private int rightMost = -1;
 	private int numRectangles = -1;
 	Object camLock = new Object();
 	UsbCamera camera;
@@ -26,63 +28,55 @@ public class HKcam {
 
 		/* Constructs UsbCamera and MjpegServer [1] and connects them */
 		camera = CameraServer.getInstance().startAutomaticCapture();
+		
+		camera.setWhiteBalanceAuto();
 
 		/* Creates the CvSource and MjpegServer [2] and connects them */
-		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", 640, 480);
+		CvSource outputStream = CameraServer.getInstance().putVideo("steamVideo", vidWidth, vidHeight);
 
 		/* Creates the CvSink and connects it to the UsbCamera */
 		CvSink cvSink = CameraServer.getInstance().getVideo();
+		
 
 		/* Constructs the VisionThread which loops between this method and the GripPipeline's process method	*/ 
 		VisionThread visionThread = new VisionThread(camera, new GripPipeline(), pipeline -> {
-
-			
-			
-			/*Find the two biggest rectangles --Khalil and Marlahna	*/
-			Rect maxRect1 = new Rect();
-			Rect maxRect2 = new Rect();
-
+	
+			/*Find the two LEFT & RIGHT-most rectangles --Khalil and Marlahna & Jamesey	*/
+			int leftMostX = vidWidth;
+			int rightMostX = 0;
 			int tempNumRectangles = pipeline.filterContoursOutput().size();
+			System.out.println("Number of rectangles found: "+tempNumRectangles);
 
 			//check if at least 2 rectangles
 			if(  (tempNumRectangles  >= 2)) {
 				
-				System.out.println(tempNumRectangles);
-
-				//storage for 2 biggest rectangles
-				maxRect1 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
-				maxRect2 = Imgproc.boundingRect(pipeline.filterContoursOutput().get(1));
-
 				//check each element
-				for(int i = 1; i < tempNumRectangles; i++) {
-					System.out.println("HELLO");
+				for(int i = 0; i < tempNumRectangles; i++) {
 
 					//Pulls rectangle at current position in the arraylist at pos i
 					Rect temp = Imgproc.boundingRect(pipeline.filterContoursOutput().get(i));
 
 					//case1: largest rect
-					if(temp.area() > maxRect1.area()) {
-						System.out.println("Hello");
-						maxRect2 = maxRect1;
-						maxRect1 = temp;
+					if(temp.x < leftMostX ) {
+						leftMostX = temp.x;
 					}
 
 					//case2: 2nd largest rect
-					else if(temp.area() > maxRect2.area()) {
-						System.out.println("Hello");
-						maxRect2 = temp;
+					else if(temp.x > rightMostX) {
+						rightMostX = temp.x;
 					}
 
 					//case3: rect is trash
-
 				}	
+				
+				synchronized(camLock){
+					leftMost  = leftMostX ;
+				    rightMost = rightMostX ;
+					numRectangles = tempNumRectangles;
+				}			
 			}
 			
-			synchronized(camLock){
-				r0 = maxRect1;
-				r1 = maxRect2;
-				numRectangles = tempNumRectangles;
-			}
+			camPrints();	//call here to be run forever in vision thread
 
 			try {
 				Thread.sleep(200);
@@ -91,8 +85,7 @@ public class HKcam {
 			}
 		});
 		visionThread.start();
-		camPrints();
-
+		
 	}
 
 	public int getNumRectangles() {
@@ -102,36 +95,26 @@ public class HKcam {
 
 	}
 
-	public Rect getRect0() {
+	public int getLeftMost() {
 		synchronized(camLock){
-			return r0;
+			return leftMost;
 		}
 	}
 
-	public Rect getRect1() {
+	public int getRightMost(){
 		synchronized(camLock){
-			return r1;
+			return rightMost;
 		}
 	}
 
 	/* Method that prints out important things about camera to SmartDashboard -Marlahna M & Malachi P	*/
 	public void camPrints() {
 
-		System.out.print ("r0.x: \t" + getRect0().x);
-		SmartDashboard.putNumber("rect0.x", getRect0().x);
-
-		Rect tempR1 = getRect1();
-		if(tempR1 != null){
-			System.out.print("\t r1.x is null!");
-			SmartDashboard.putString("rect1.x", "null");
-
-		} else {
-			System.out.print("\t r1.x: \t" + getRect1().x);
-			SmartDashboard.putNumber("rect values", getRect1().x);
-		}
-
-		System.out.println("\t numRect = " + getNumRectangles());
-		SmartDashboard.putNumber("rect values", getNumRectangles());
+		//System.out.print ("r0.x: \t" + getRect0().x);
+		SmartDashboard.putNumber("leftMost", leftMost);
+		SmartDashboard.putNumber("rightMost", rightMost);
+		//SmartDashboard.putNumber("rect0.width", getRect0().width);
+		//SmartDashboard.putNumber("rect0.height", getRect0().height);
 
 	}
 
