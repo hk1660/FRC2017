@@ -148,7 +148,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		while(isAutonomous() && isEnabled()){ 
 
 			double timerA = timerAuto.get();
-			SmartDashboard.putNumber("match time",timerA);
+			/*SmartDashboard.putNumber("match time",timerA);
 			if(currentStrategy == 1) {
 				runAutoStrategy_GoForwardOnly(timerAuto);
 			} else if (currentStrategy == 2) {
@@ -157,7 +157,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 				//this.runAutoStratgy_noCamSidePeg(timerAuto);
 
 
-			}
+			} */
 		}
 	}
 
@@ -172,10 +172,13 @@ public class Robot extends SampleRobot implements PIDOutput {
 			checkDriving();
 			checkGyroFlag();
 			//checkTurnRobotAngle();
-			checkChangeAngle();
+			//checkChangeAngle();
 			checkResetGyro();
 			printGyro();
-
+			turn90();
+			turn180();
+			turn270();
+			turn0();
 			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
@@ -374,12 +377,34 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 	/* method to change the angle of the robot  -Jamzii */
-	public boolean checkChangeAngle(){
-		if(manipStick.getRawButton(X_BUTTON)==true){
+	public boolean turn90(){
+		if(driverStick.getPOV()==this.POV_LEFT){
 			this.changeAngle(90);
 		}
-		return manipStick.getRawButton(X_BUTTON);
+		return driverStick.getPOV()==this.POV_LEFT ;
 	}
+	
+	public boolean turn180(){
+		if(driverStick.getPOV()==this.POV_DOWN){
+			this.changeAngle(179.9);
+		}
+		return driverStick.getPOV()==this.POV_DOWN ;
+	}
+	
+	public boolean turn270(){
+		if(driverStick.getPOV()==this.POV_RIGHT){
+			this.changeAngle(-90);
+		}
+		return driverStick.getPOV()==this.POV_RIGHT ;
+	}
+
+	public boolean turn0(){
+		if(driverStick.getPOV()==this.POV_UP){
+			this.changeAngle(0);
+		}
+		return driverStick.getPOV()==this.POV_UP ;
+	}
+
 
 	/* Joystick Combo method to pick up a gear -Donashia	*/
 	public void checkComboPickUpGear(){
@@ -729,7 +754,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 	/*	method to turn to a specific field-orientation -Malachi & Ahmed	*/
-	public void turnRobotAngle(float angle){
+	/*public void turnRobotAngle(float angle){
 
 		turnRobotAngleInit();
 		boolean rotateToAngle = false;
@@ -762,7 +787,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 			DriverStation.reportError("Error communicating with drive system:  " + ex.getMessage(), true);
 		}    
 
-	}
+	}*/
 
 	@Override
 	/* This function is invoked periodically by the PID Controller, */
@@ -858,7 +883,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 			strafeRightAtSpeed(0.3);
 		} else if (timeD < 10.0){
 			//stopDrive();
-			turnRobotAngle(180);
+		//	turnRobotAngle(180);
 		} else if (timeD < 12.0){
 			rotateUp();
 		} else if(timeD < 14.0){
