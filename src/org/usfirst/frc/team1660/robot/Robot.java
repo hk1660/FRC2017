@@ -1,4 +1,4 @@
-p;package org.usfirst.frc.team1660.robot;
+package org.usfirst.frc.team1660.robot;
 
 /* ----------	IMPORTED LIBRARIES & CLASSES	--------------------------------------------------------------------------*/
 import org.usfirst.frc.team1660.robot.HKdrive;
@@ -575,10 +575,14 @@ public class Robot extends SampleRobot implements PIDOutput {
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-	Timer comboPickUpTimer = new Timer();--0s
-	Timer comboPickupTimer2 = new Timer();--5s
+	Timer comboPickUpTimer = new Timer();//--0s
+	Timer comboPickupTimer2 = new Timer();//--5s
 
 	public void comboPickUpGear() {
+
+//		if( this.hovaRelay.get() == Relay.Value.kForward){			
+//	}
+		
 		comboPickUpTimer.reset();
 		if (comboPickUpTimer.get() != 0){
 			if(comboPickUpTimer.get() < 5 || !isGear()){
@@ -618,7 +622,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 		 rotateDown();
 	 }
 	 if(comboPickUpTimer.get() > 6 && comboPickUpTimer.get() < 8){
-		 DropGear();
+		 dropGear();
 	 }
 	}
 	
