@@ -1,4 +1,4 @@
-package org.usfirst.frc.team1660.robot;
+p;package org.usfirst.frc.team1660.robot;
 
 /* ----------	IMPORTED LIBRARIES & CLASSES	--------------------------------------------------------------------------*/
 import org.usfirst.frc.team1660.robot.HKdrive;
@@ -550,8 +550,8 @@ public class Robot extends SampleRobot implements PIDOutput {
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-	Timer comboPickUpTimer = new Timer();
-	Timer comboPickupTimer2 = new Timer();
+	Timer comboPickUpTimer = new Timer();--0s
+	Timer comboPickupTimer2 = new Timer();--5s
 
 	public void comboPickUpGear() {
 		comboPickUpTimer.reset();
@@ -563,7 +563,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 				}
 			}
 			if(comboPickUpTimer.get() > 5.0){
-				comboPickUpTimer.stop();
+				//comboPickUpTimer.stop();
 				comboPickUpTimer.reset();
 			}
 		}
@@ -580,6 +580,25 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 
+	Timer rePositionGearTimer = new Timer();
+	Timer rePositionGearTimer2 = new Timer();
+	public void rePositionGear(){
+		 rePositionGearTimer.reset();
+	 if(rePositionGearTimer.get() != 0){
+	  if(comboPickUpTimer.get() < 5){
+		  holdGear(); 
+		 }
+	 }
+	 if(comboPickUpTimer.get() > 5 && comboPickUpTimer.get() < 6){
+		 rotateDown();
+	 }
+	 if(comboPickUpTimer.get() > 6 && comboPickUpTimer.get() < 8){
+		 DropGear();
+	 }
+	}
+	
+	
+	
 	/* Combo Method to aim and move robot towards peg	*/
 	public void comboAimRobot() { 
 
@@ -792,7 +811,7 @@ public class Robot extends SampleRobot implements PIDOutput {
 	}
 
 	/*	method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A	*/
-	public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
+	public void runAutoStratgy_noCamSideh(Timer timerAuto) {
 
 		double timeC = timerAuto.get();
 
