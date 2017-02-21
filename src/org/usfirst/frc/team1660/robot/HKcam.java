@@ -45,7 +45,6 @@ public class HKcam {
 			int leftMostX = vidWidth;
 			int rightMostX = 0;
 			int tempNumRectangles = pipeline.filterContoursOutput().size();
-			System.out.println("Number of rectangles found: "+tempNumRectangles);
 
 			//check if at least 2 rectangles
 			if(  (tempNumRectangles  >= 2)) {
@@ -76,8 +75,11 @@ public class HKcam {
 				}			
 			}
 			
-			camPrints();	//call here to be run forever in vision thread
-
+			SmartDashboard.putNumber("NumRects", tempNumRectangles);
+			SmartDashboard.putNumber("leftMost", leftMostX);
+			SmartDashboard.putNumber("rightMost", rightMostX);
+			System.out.println("NumRects: " + tempNumRectangles + "\tLeftX: " + leftMostX + "\tRightX: " + rightMostX);
+			
 			try {
 				Thread.sleep(200);
 			} catch(InterruptedException e){
@@ -107,22 +109,8 @@ public class HKcam {
 		}
 	}
 
-	/* Method that prints out important things about camera to SmartDashboard -Marlahna M & Malachi P	*/
-	public void camPrints() {
-
-		//System.out.print ("r0.x: \t" + getRect0().x);
-		SmartDashboard.putNumber("leftMost", leftMost);
-		SmartDashboard.putNumber("rightMost", rightMost);
-		//SmartDashboard.putNumber("rect0.width", getRect0().width);
-		//SmartDashboard.putNumber("rect0.height", getRect0().height);
-
-	}
-
-
 	/* method that stops the vision processing	*/
 	public void camKill(){
-
-
 
 
 	}
