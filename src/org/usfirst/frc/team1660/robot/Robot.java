@@ -194,7 +194,7 @@ double lastUsedAngle;
 			getPegX();
 			getDistanceUS();
 			//checkComboAimRobot();	//60 degrees?
-			//checkComboPlaceGear();
+			checkComboPlaceGear();
 
 			/* Climbing commands	*/
 			checkClimbRope();
@@ -292,12 +292,12 @@ double lastUsedAngle;
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getPOV()==this.POV_UP){
-			holdGear();
+			//holdGear();
 			rotateUp();
 		}
 		if(manipStick.getPOV()==this.POV_DOWN){
 
-				holdGear();
+			//	holdGear();
 				rotateDown();
 				
 		}
@@ -425,10 +425,17 @@ double lastUsedAngle;
 		}
 	}	
 
+	Timer x = new Timer();
 	/* Joystick Combo method to place a gear on a peg automatically		-Shivanie H	*/
 	public void checkComboPlaceGear(){
 		if(manipStick.getRawButton(B_BUTTON) == true){
 			comboPlaceGear();
+			x.start();
+		}
+		if (x.get() > 1){
+			dropGear();
+			x.reset();
+			x.stop();
 		}
 	}
 
@@ -484,6 +491,7 @@ double lastUsedAngle;
 
 	/* basic "hova" rotation methods	*/
 	public void rotateUp(){
+	
 		hovaRelay.set(Relay.Value.kForward); 	
 	}
 	public void rotateDown(){
@@ -830,11 +838,11 @@ double lastUsedAngle;
 
 	public void goForwardAtSpeed(double speed) {
 		
-		robotDrive.mecanumDrive_Cartesian(0, speed,  autoTurnSpeed(0), 0);
+		robotDrive.mecanumDrive_Cartesian(0, 0,  speed, 0);
 	}
 
 	public void goBackwardAtSpeed (double speed){
-		robotDrive.mecanumDrive_Cartesian(0,-speed,0,0);
+		robotDrive.mecanumDrive_Cartesian(0,0,-speed,0);
 	}
 
 	public void stopDrive() {
@@ -907,20 +915,19 @@ double lastUsedAngle;
 
 		double timeC = timerAuto.get();
 
-		if (timeC < 3.0) {
+		if (timeC < 2.6) {
 			holdGear();
-			goForwardAtSpeed(0.5);
-		} else if (timeC < 4.0) {
-			autoTurn(300);
-		} else if (timeC < 6.0) {
-			this.goForwardAtSpeed(0.5);		//DEAD RECKONING
-		} else if (timeC < 9.0){
-			stopDrive();
+			goForwardAtSpeed(0.3);
 			rotateUp();
-		} else if(timeC < 10.0){
+		} else if (timeC < 4.0) {
+			autoTurn(60);
+		} else if (timeC < 7.0) {
+			this.goForwardAtSpeed(0.3);		//DEAD RECKONING
+		} else if (timeC < 8.0){
+			stopDrive();
 			dropGear();
-		} else if (timeC < 11.0){
-			goBackwardAtSpeed(0.5);
+		}  else if (timeC < 10.0){
+			goBackwardAtSpeed(0.3);
 		} else {
 			stopDrive();
 		}
@@ -933,15 +940,14 @@ double lastUsedAngle;
 
 		double timeD = timerAuto.get();
 
-		if (timeD <4.0){
+		if (timeD <5.0){
 			holdGear();
 			goForwardAtSpeed(0.3);
-		} else if (timeD < 7.0){
-			stopDrive();
 			rotateUp();
-		} else if (timeD < 10.0){
+		} else if (timeD < 6.0){
+			stopDrive();
 			dropGear();
-		} else if(timeD < 13.0){
+		} else if(timeD < 8.0){
 			goBackwardAtSpeed(0.3);
 		} else{
 			stopDrive();
