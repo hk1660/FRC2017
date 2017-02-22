@@ -32,7 +32,8 @@ public class Robot extends SampleRobot {
 	boolean gyroFlag = true;	//use gyro for driving
 	boolean autoDriveFlag = false;	//automatic driving
 	boolean rotateFlag = false;	//helps open claw after rotating down
-	Timer timerR;
+	Timer timerR = new Timer();
+
 
 	double rotateToAngleRate;
 	double zeroedYawPoint = 0.0;
@@ -44,7 +45,7 @@ public class Robot extends SampleRobot {
 	CANTalon climber = new CANTalon(5);
 	CANTalon miniGearFRight = new CANTalon(6);
 	CANTalon miniGearFLeft = new CANTalon(7);
-
+double lastUsedAngle;
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(1);
 	Relay hovaRelay = new Relay(2);
@@ -90,10 +91,6 @@ public class Robot extends SampleRobot {
 	final int STRAFE_AXIS = LEFT_X_AXIS; //Left joystick side to side
 
 
-	/*Lift peg coordinates that the robot sees	*/
-	double distanceFromWall = -2.0;
-
-
 	/* ----------	REQUIRED METHODS	--------------------------------------------------------------------------*/
 	/* Robot(), robotInit(), autonomous(), and operatorControl()	*/
 
@@ -116,7 +113,7 @@ public class Robot extends SampleRobot {
 		hkcam.camInit();
 
 		//CHOOSING AUTO MODE
-		
+
 		/*
 		startingPosition = new SendableChooser();
 		startingPosition.addDefault("Left", new Integer(1));
@@ -124,12 +121,12 @@ public class Robot extends SampleRobot {
 		startingPosition.addObject("Right", new Integer(3));
 		SmartDashboard.putData("startingPosition", startingPosition);
 		 */
-		
+
 		strategy = new SendableChooser();
 		strategy.addDefault("Move forward only", new Integer(1));
-		strategy.addDefault("Place Gear Left-Peg", new Integer(2));
-		strategy.addDefault("No-Cam Front-Peg", new Integer(3));
-		strategy.addDefault("No-Cam Left-Peg", new Integer(4));
+		strategy.addObject("Place Gear Left-Peg", new Integer(2));
+		strategy.addObject("No-Cam Front-Peg", new Integer(3));
+		strategy.addObject("No-Cam Left-Peg", new Integer(4));
 		SmartDashboard.putData("strategy selector", strategy);
 
 		//Start match with zeroed gyro, and grabbing gear down
@@ -146,7 +143,7 @@ public class Robot extends SampleRobot {
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
 		int currentStrategy = (int) strategy.getSelected(); 
-
+		zeroedYawPoint = ahrs.getAngle();
 		while(isAutonomous() && isEnabled()){ 
 
 			double timerA = timerAuto.get();
@@ -175,11 +172,13 @@ public class Robot extends SampleRobot {
 		while (isOperatorControl() && isEnabled()) {
 
 			/*Driving commands		*/
+			
 			checkDriving();
-			//checkGyroFlag(); //always keep on!
+			checkGyroFlag(); //always keep on!
 			checkAutoTurn();
 			checkResetGyro();
 			printGyro();
+			getCurrentAngle();
 
 			/*Gear Collection commands			*/
 			checkMiniGears();
@@ -188,15 +187,14 @@ public class Robot extends SampleRobot {
 			checkHova();
 			//checkCompressor();
 			checkCompressorSwitch();
-			checkComboGroundLoad();
+			//checkComboGroundLoad();
 
 
 			/* Gear Placing commands		*/
 			getPegX();
-			getDistanceFar(); 
-			getDistanceClose();
-			checkComboAimRobot();	//300 degrees?
-			checkComboPlaceGear();
+			getDistanceUS();
+			//checkComboAimRobot();	//60 degrees?
+			//checkComboPlaceGear();
 
 			/* Climbing commands	*/
 			checkClimbRope();
@@ -223,36 +221,29 @@ public class Robot extends SampleRobot {
 		double angle = ahrs.getAngle();
 
 		//Kill Ghost motors & turn-off Auto methods if a joystick is pushed	-Matthew M
-		if(moveValue > threshold*-1 && moveValue < threshold) {
-			moveValue = 0;
-		} else {
-			autoDriveFlag = false;
+		if(moveValue > -threshold && moveValue < threshold) {
+			moveValue = 0.0;
 		}
-		if(rotateValue > threshold*-1 && rotateValue < threshold) {
-			rotateValue = 0;
-		} else {
-			autoDriveFlag = false;
-		}
-		if(strafe > threshold*-1 && strafe < threshold) {
-			strafe = 0;
-		} else {
-			autoDriveFlag = false;
+
+		if(rotateValue > -threshold && rotateValue < threshold) {
+			rotateValue = 0.0;
+		} 
+
+		if(strafe > -threshold && strafe < threshold) {
+			strafe = 0.0;
 		}
 
 		//MECANUM -Malachi P
-
-		if(gyroFlag == true && autoDriveFlag == false ){
-			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, angle);
-
-		} else if(autoDriveFlag == false) {
+		if(autoDriveFlag == false ){
 			robotDrive.mecanumDrive_Cartesian( strafe, -rotateValue, -moveValue, 0);
-		}
 
-		//Prints
-		SmartDashboard.putNumber("move",	moveValue);
-		SmartDashboard.putNumber("rotate",	rotateValue);
-		SmartDashboard.putNumber("strafe",	strafe);
-		SmartDashboard.putNumber("angle",	angle);
+			//Prints
+			SmartDashboard.putNumber("move",	moveValue);
+			SmartDashboard.putNumber("rotate",	rotateValue);
+			SmartDashboard.putNumber("strafe",	strafe);
+			SmartDashboard.putNumber("angle",	angle);
+		} 
+
 		SmartDashboard.putBoolean("AUTODRIVING", autoDriveFlag);
 	}
 
@@ -306,28 +297,19 @@ public class Robot extends SampleRobot {
 		}
 		if(manipStick.getPOV()==this.POV_DOWN){
 
-			if(rotateFlag == false){
-				rotateFlag = true;
 				holdGear();
 				rotateDown();
-				timerR = new Timer();
-				timerR.start();
-			}	
+				
 		}
-		if(timerR.get() > 1.0){
-			rotateFlag = false;
-			dropGear();
-			timerR.reset();
-			timerR.stop();
-		}
+	
 	}
 
 	/* Joystick method to grab and ungrab the gears with the hockey-stick shaped claw -imani l */
 	public void checkHockey(){
-		if(manipStick.getPOV() == this.POV_LEFT){
+		if(manipStick.getPOV() == this.POV_RIGHT){
 			holdGear();
 		}
-		if(manipStick.getPOV() == this.POV_RIGHT){
+		if(manipStick.getPOV() == this.POV_LEFT){
 			dropGear();
 		}
 	}
@@ -399,19 +381,29 @@ public class Robot extends SampleRobot {
 
 		if(driverStick.getPOV()==this.POV_LEFT){
 			autoDriveFlag = true;
-			this.autoTurn(60);		//aiming at the Right Peg
+			this.autoTurn(300);		//aiming at the Right Peg
+			this.lastUsedAngle=300;
+
 		}
-		if(driverStick.getPOV()==this.POV_DOWN){
+		else if(driverStick.getPOV()==this.POV_DOWN){
 			autoDriveFlag = true;
 			this.autoTurn(180);	//heading back towards driverStation
+			this.lastUsedAngle=180;
+
 		}
-		if(driverStick.getPOV()==this.POV_RIGHT){
+		else if(driverStick.getPOV()==this.POV_RIGHT){
 			autoDriveFlag = true;
-			this.autoTurn(300);		//aiming at the Left Peg
+			this.autoTurn(60);		//aiming at the Left Peg
+			this.lastUsedAngle=60;
+
 		}
-		if(driverStick.getPOV()==this.POV_UP){
+		else if(driverStick.getPOV()==this.POV_UP){
 			autoDriveFlag = true;
-			this.autoTurn(0);		//heading away from driverStation
+			this.autoTurn(0);	//heading away from driverStation
+			this.lastUsedAngle=0;
+		}
+		else{
+			autoDriveFlag=false;
 		}
 	}
 
@@ -424,9 +416,12 @@ public class Robot extends SampleRobot {
 
 	/* Joystick combo method to aim robot driving towards peg	*/
 	public void checkComboAimRobot(){
-		if(manipStick.getRawButton(A_BUTTON) == true){
+		if(driverStick.getRawButton(X_BUTTON) == true){
 			autoDriveFlag = true;
-			comboAimRobot(300);
+			comboAimRobot(this.lastUsedAngle);
+		}
+		else{
+			autoDriveFlag=false;
 		}
 	}	
 
@@ -440,7 +435,7 @@ public class Robot extends SampleRobot {
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
 
-	//method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
+	/*method to be used aim in autonomous mode -Keon, Malachi P, Ahmed A
 	public double getDistanceFar(){
 
 		double x = ultraSonicLong.getAverageVoltage();
@@ -448,14 +443,16 @@ public class Robot extends SampleRobot {
 		SmartDashboard.putNumber("Distance (Far)", distanceInInches);
 		return distanceInInches;
 	}
-	public double getDistanceClose(){
+	 */
+	public double getDistanceUS(){
 
 		ultraSonicShort.setAutomaticMode(true);
 		ultraSonicShort.setEnabled(true);
 		double y = ultraSonicShort.getRangeInches();
-		double  x = ultraSonicShort.getRangeInches();
-		distanceFromWall = y;
-		SmartDashboard.putNumber("Real Distance", y);
+		if (y>120){
+			y=-5;//this means it isnt working
+		}
+		SmartDashboard.putNumber("Ultra Sonic DIstance is ", y);
 		return y;
 
 	}
@@ -471,7 +468,7 @@ public class Robot extends SampleRobot {
 	public int getPegX() {
 
 		int pegX = -1;
-		
+
 		int leftX = hkcam.getLeftMost();
 		int rightX = hkcam.getRightMost();
 
@@ -537,25 +534,30 @@ public class Robot extends SampleRobot {
 	/* basic method to turn gyro-driving on and off	-Malachi P	*/
 	public void turnGyroOn(){
 		gyroFlag = true;
+		SmartDashboard.putBoolean("GyroFlag", gyroFlag);
 	}
 	public void turnGyroOff(){
 		gyroFlag = false;
+		SmartDashboard.putBoolean("GyroFlag", gyroFlag);
 	}
 
 	/* method to determine the current angle/heading of the robot from 0 - 359 degrees	-Ahmed	*/
 	public int getCurrentAngle(){
 		int moddedAngle = Math.floorMod((int)ahrs.getAngle(), 360);
 		int moddedZeroedYawPoint = Math.floorMod((int)zeroedYawPoint, 360);
-		return Math.floorMod((moddedAngle - moddedZeroedYawPoint), 360);
+		int modAngle = Math.floorMod((moddedAngle - moddedZeroedYawPoint), 360);
+
+		SmartDashboard.putNumber("modAngle", modAngle);
+		return modAngle;
 	}
 
 	/* method to change the angle of the robot based off the gyro  -Ahmed A & Jamzii 
 	 * @PARAM futureAngle should be an int between 0 and 359	
 	 * */
-	public double autoTurnSpeed (int futureAngle){
+	public double autoTurnSpeed (double futureAngle){
 
-		int actualangle = this.getCurrentAngle();
-		int diff = futureAngle - actualangle;	//positive deg for right turns
+		double actualangle = this.getCurrentAngle();
+		double diff = futureAngle - actualangle;	//positive deg for right turns
 
 		// make the diff-values range from  -179 to 179
 		if (diff > 180){ 			//to handle extra large right turns
@@ -563,39 +565,53 @@ public class Robot extends SampleRobot {
 		} else if (diff < -180){	//to handle extra large left turns
 			diff = diff + 360;
 		}
+		SmartDashboard.putNumber("AutoTurn Diff", diff);
 
 		double angle_tolerance = 5.0;
 		double min_speed = 0.4;
 		double desired_speed = 0.0;
 
 		//adjust speeds to decrease as you approach the desired angle
-		if(diff > 0 ){
-			desired_speed = min_speed + (diff / 180) / (1-min_speed);
-			desired_speed = Math.pow(desired_speed, 2);
-		} else{
-			desired_speed = (-1* min_speed) + (diff / 180) / (1-min_speed);
-			desired_speed = -1 * Math.pow(desired_speed, 2);
-		}
 
-		//kill the turning speed if it is within the tolerance
-		if ( Math.abs(diff) < angle_tolerance) {
+		desired_speed = (1.0-min_speed) * (Math.abs(diff)/180) + min_speed;
+		//desired_speed = Math.pow(desired_speed, 2);
+
+		// assinging speed based on positive or negative - Kahlil & Malachi P
+		if(diff > angle_tolerance ){  //right hand turn - speed
+			desired_speed = -desired_speed;
+		} else if(diff < -angle_tolerance){ // left hand turn +speed
+			desired_speed = desired_speed;		
+		}else{
 			desired_speed = 0.0;
 		}
 
+
+		SmartDashboard.putNumber("AUtoTurn Speed", desired_speed);
 		//prints
 		System.out.println("ANGLE: "+ actualangle + " DIFF IS: " + diff + " DESIRED SPEED IS " + desired_speed);
 		return desired_speed;
 	}
 	public void autoTurn(int futureAngle){
 
-		//set flag to do autoDriving
-		this.autoDriveFlag = true;
-
 		//find correct speed to turn
 		double desired_speed = autoTurnSpeed(futureAngle);
+		
+		double strafeSpeedLeft= driverStick.getRawAxis(LT_AXIS);
+		double strafeSpeedRight = driverStick.getRawAxis(RT_AXIS);
+		double strafeSpeedActual=0;
+		double minMotorSpeed = .3;
+		if(strafeSpeedLeft>0){
+			strafeSpeedActual=((Math.pow(strafeSpeedLeft,2))/.3)+minMotorSpeed;
+			strafeSpeedActual=strafeSpeedActual*-1;
+		}
+		else if (strafeSpeedRight>0){
+			strafeSpeedActual=(Math.pow(strafeSpeedRight,2)/.3)+minMotorSpeed;
+			}
+		
+		
 
 		//keep turning until within the tolerance from desired angle
-		robotDrive.mecanumDrive_Cartesian(0, desired_speed, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(strafeSpeedActual, desired_speed, 0, 0);
 
 	}
 
@@ -677,18 +693,18 @@ public class Robot extends SampleRobot {
 	}
 
 	/* Combo Method to aim and move robot towards peg	*/
-	public void comboAimRobot(int pegAngle) { 
+	public void comboAimRobot(double pegAngle) { 
 
 		//DRIVING values
-		autoDriveFlag = true;
-		double aimFwdSpeed = 0.0;
+		
+		double aimFwdSpeed = 0.3;
 		double aimStrafeSpeed = 0.0;
 		double turnSpeed = 0.0;
 
 		//VISION values
 		int leftX = hkcam.getLeftMost();
 		int rightX = hkcam.getRightMost();
-		
+
 		int desiredCenterX = 640/2;
 		int seenPeg = getPegX();
 		int xDifference = desiredCenterX - seenPeg;
@@ -714,13 +730,52 @@ public class Robot extends SampleRobot {
 		turnSpeed = autoTurnSpeed(pegAngle);			
 
 		//MOVE fwd if not close enough to the wall yet
-		if(currentWidth>pixelThreshold){
+
+		/*
+		if(currentWidth>pixelThreshold){ //this is ccalulating distance based on the camera
 			aimFwdSpeed = minMotorSpeed + ((currentWidth/250) / ( 1 - minMotorSpeed));
 		}
 
-		//DRIVE robot towards peg
-		robotDrive.mecanumDrive_Cartesian(aimFwdSpeed, turnSpeed, aimStrafeSpeed, ahrs.getAngle());
+		 */
+		
+		
+		double distance = getDistanceUS();
+		/*
+		//this is calculating distance based on the ultrasonic censor
+		if(distance < 19 && distance!=-5){
+			aimFwdSpeed=0;
+		}
+		else if(distance<43 || distance==-5){
+			aimFwdSpeed=.4;
+		}
+		else if (distance>43 && distance<120 ){
+			aimFwdSpeed=1.0;
+		}
+		*/
+		
+		
+		
+		//This is to aim using ultrasonic with the assistance of the camera
+		if(distance==-5 && widthDifference>pixelThreshold){
+			aimFwdSpeed = minMotorSpeed + ((widthDifference/250) / ( 1 - minMotorSpeed));
 
+		}
+		else if(distance < 19 && distance!=-5){
+			aimFwdSpeed=0;
+		}
+		else if(distance<43){
+			aimFwdSpeed=.4;
+		}
+		else if (distance>43 && distance<120 ){
+			aimFwdSpeed=1.0;
+		}
+
+
+
+		//DRIVE robot towards peg
+		//robotDrive.mecanumDrive_Cartesian(aimFwdSpeed, turnSpeed, aimStrafeSpeed, 0);
+		robotDrive.mecanumDrive_Cartesian(aimStrafeSpeed, aimFwdSpeed, turnSpeed, 0);
+		
 		SmartDashboard.putNumber("aimFwdSpeed", aimFwdSpeed);
 		SmartDashboard.putNumber("aimStrafeSpeed", aimStrafeSpeed);
 		SmartDashboard.putNumber("aimTurnSpeed", turnSpeed);
@@ -774,11 +829,12 @@ public class Robot extends SampleRobot {
 	/* BASIC DRIVETRAIN FUNCTIONS */
 
 	public void goForwardAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
+		
+		robotDrive.mecanumDrive_Cartesian(0, speed,  autoTurnSpeed(0), 0);
 	}
 
 	public void goBackwardAtSpeed (double speed){
-		robotDrive.mecanumDrive_Cartesian(0,0,-speed,0);
+		robotDrive.mecanumDrive_Cartesian(0,-speed,0,0);
 	}
 
 	public void stopDrive() {
@@ -794,15 +850,15 @@ public class Robot extends SampleRobot {
 	}
 
 	public void turnLeftAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, speed, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(0, 0, -speed, 0);
 	}
 
 	public void turnRightAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(0, -speed, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(0, 0, speed, 0);
 	}
 
 	public void turnAndStrafe(double strafeSpeed, double turnSpeed) {
-		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, -turnSpeed, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(-strafeSpeed, 0, -turnSpeed, 0);
 	}
 
 
@@ -822,25 +878,23 @@ public class Robot extends SampleRobot {
 		}
 	}
 
-	
+
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
-		
+
 		double timeB = timerAuto.get();
 
 		if (timeB < 3.0) {
 			holdGear();
 			goForwardAtSpeed(0.5);
-		} else if (timeB < 4.0) {
-			autoTurn(300);
-		} else if (timeB < 6.0) {
-			comboAimRobot(300);		//AIM based on CAM & Gyro
-		} else if (timeB < 9.0){
+		} else if (timeB < 9.0) {
+			this.comboAimRobot(60);
+		}  else if (timeB < 11.0){
 			stopDrive();
 			rotateUp();
-		} else if(timeB < 10.0){
+		} else if(timeB < 13.0){
 			dropGear();
-		} else if (timeB < 11.0){
+		} else if (timeB < 15.0){
 			goBackwardAtSpeed(0.5);
 		} else {
 			stopDrive();
