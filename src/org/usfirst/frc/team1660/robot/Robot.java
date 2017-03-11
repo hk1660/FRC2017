@@ -174,12 +174,13 @@ double lastUsedAngle;
 			/*Driving commands		*/
 			
 			checkDriving();
-			checkGyroFlag(); //always keep on!
+			//checkGyroFlag(); //always keep on!
 			checkAutoTurn();
 			checkResetGyro();
 			printGyro();
 			getCurrentAngle();
-
+			checkCamStrafe();
+			
 			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
@@ -266,6 +267,15 @@ double lastUsedAngle;
 		}
 	}
 
+	/* joystick method to flip the gyroflag -Malachi P	*/
+	public void checkCamStrafe(){
+		if(driverStick.getRawButton(A_BUTTON)==true){ 
+			camStrafe();
+		}
+	}
+
+	
+	
 	/* Joystick method to eat and spit gears on ground	*/
 	public void checkMiniGears() {
 		double thresh = 0.2;
@@ -279,16 +289,11 @@ double lastUsedAngle;
 		}
 	}
 
-	/* joystick method to flip the gyroflag -Malachi P	*/
-	public void checkGyroFlag(){
-		if(driverStick.getRawButton(A_BUTTON)==true){ 
-			this.turnGyroOn();
-		}
-		if(driverStick.getRawButton(B_BUTTON)==true){
-			this.turnGyroOff();
-		}
-	}
-
+	
+	
+	
+	
+	
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getPOV()==this.POV_UP){
@@ -559,6 +564,34 @@ double lastUsedAngle;
 		return modAngle;
 	}
 
+	
+	/* method to align the robot to the peg using the camera from 3 feet away -Ahmahna	*/
+	public void camStrafe(){
+		
+		int leftmost = hkcam.getLeftMost();		//200
+		int target = 300;
+		int thresh = 10;
+		double speed = 0.4;
+		
+		//strafe to the left
+		if (leftmost - thresh < target ){
+			robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
+			SmartDashboard.putString("camStrafe", "STRAFE LEFT");
+		} else if (leftmost + thresh > target){
+			robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
+			SmartDashboard.putString("camStrafe", "STRAFE RIGHT");
+		} else {
+			this.stopDrive();
+			SmartDashboard.putString("camStrafe", "STOP!");
+		}
+		
+		
+		
+		
+	}
+	
+	
+	
 	/* method to change the angle of the robot based off the gyro  -Ahmed A & Jamzii 
 	 * @PARAM futureAngle should be an int between 0 and 359	
 	 * */
@@ -850,11 +883,11 @@ double lastUsedAngle;
 	}
 
 	public void strafeLeftAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
 	}
 
 	public void strafeRightAtSpeed(double speed) {
-		robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
+		robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
 	}
 
 	public void turnLeftAtSpeed(double speed) {
