@@ -139,6 +139,12 @@ double lastUsedAngle;
 
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
+		
+
+		//This should be tested
+		
+		changeDrivingToVoltage();
+
 		robotDrive.setSafetyEnabled(false);
 		Timer timerAuto = new Timer();
 		timerAuto.start(); 
@@ -148,7 +154,11 @@ double lastUsedAngle;
 
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("AutoTimer",timerA);
-
+			runAutoStrategy_noCamFrontPeg(timerAuto);
+		//	runAutoStrategy_noCamSidePegLeft(timerAuto);
+		//	runAutoStratgy_noCamSidePegRight(timerAuto);
+			
+			/*
 			if(currentStrategy == 1) {
 				runAutoStrategy_GoForwardOnly(timerAuto);
 
@@ -159,14 +169,17 @@ double lastUsedAngle;
 				runAutoStrategy_noCamFrontPeg(timerAuto);
 
 			} else if (currentStrategy == 4) {
-				runAutoStratgy_noCamSidePeg(timerAuto);
+				runAutoStratgy_noCamSidePegRight(timerAuto);
 			}
+			*/
 		}
 	}
 
 
 	public void operatorControl() {
 		//System.out.println("operatorControl");
+		this.changeDrivingToPercent();
+		
 		robotDrive.setSafetyEnabled(true);
 
 		while (isOperatorControl() && isEnabled()) {
@@ -574,7 +587,8 @@ double lastUsedAngle;
 		double speed = 0.4;
 		
 		//strafe to the left
-		if (leftmost - thresh < target ){
+		if( leftmost!=0 || leftmost!=640 || leftmost!=1){
+		if (leftmost - thresh < target  ){
 			robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
 			SmartDashboard.putString("camStrafe", "STRAFE LEFT");
 		} else if (leftmost + thresh > target){
@@ -584,7 +598,10 @@ double lastUsedAngle;
 			this.stopDrive();
 			SmartDashboard.putString("camStrafe", "STOP!");
 		}
-		
+		}
+		else {
+			stopDrive();
+		}
 		
 		
 		
@@ -596,7 +613,7 @@ double lastUsedAngle;
 	 * @PARAM futureAngle should be an int between 0 and 359	
 	 * */
 	public double autoTurnSpeed (double futureAngle){
-
+		changeDrivingToPercent();
 		double actualangle = this.getCurrentAngle();
 		double diff = futureAngle - actualangle;	//positive deg for right turns
 
@@ -868,6 +885,21 @@ double lastUsedAngle;
 
 	/* ------------------------------------------------------------------------------------*/
 	/* BASIC DRIVETRAIN FUNCTIONS */
+	//this changes the driving to be based on direct voltage input
+	public void changeDrivingToVoltage(){
+		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.frontRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+	}
+	//This changes the driving to be based on percentage of voltage
+	public void changeDrivingToPercent(){
+		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+		this.frontRight.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+		this.rearRight.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+		this.robotDrive.setMaxOutput(1.0);	
+	}
 
 	public void goForwardAtSpeed(double speed) {
 		
@@ -911,8 +943,8 @@ double lastUsedAngle;
 	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
 		double timeA = timerAuto.get();
-		if(timeA < 2) {
-			goForwardAtSpeed(0.3);
+		if(timeA < 1) {
+			goForwardAtSpeed(0.4);
 		}
 		else{
 			stopDrive();
@@ -921,46 +953,51 @@ double lastUsedAngle;
 
 
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
-	public void runAutoStrategy_PlaceGearLeftPeg(Timer timerAuto) {
-
-		double timeB = timerAuto.get();
-
-		if (timeB < 3.0) {
-			holdGear();
-			goForwardAtSpeed(0.5);
-		} else if (timeB < 9.0) {
-			this.comboAimRobot(60);
-		}  else if (timeB < 11.0){
-			stopDrive();
-			rotateUp();
-		} else if(timeB < 13.0){
-			dropGear();
-		} else if (timeB < 15.0){
-			goBackwardAtSpeed(0.5);
-		} else {
-			stopDrive();
-		}
-
-	}
-
-	/*	method to be used aim in autonomous mode -Ahmed, Keon, Malachi P, */
-	public void runAutoStratgy_noCamSidePeg(Timer timerAuto) {
-
+	public void runAutoStratgy_noCamSidePegRight(Timer timerAuto) {
 		double timeC = timerAuto.get();
-
-		if (timeC < 2.6) {
-			holdGear();
-			goForwardAtSpeed(0.3);
+if(timeC<.5){
+	holdGear();
+}
+else if (timeC < 2.8) {
+			this.goForwardVoltage(4.0);
 			rotateUp();
 		} else if (timeC < 4.0) {
-			autoTurn(60);
+			autoTurn(300);
 		} else if (timeC < 7.0) {
-			this.goForwardAtSpeed(0.3);		//DEAD RECKONING
+			this.goForwardVoltage(4.0);
+			//DEAD RECKONING
 		} else if (timeC < 8.0){
 			stopDrive();
 			dropGear();
 		}  else if (timeC < 10.0){
-			goBackwardAtSpeed(0.3);
+			this.goBackwardVoltage(4.0);
+		} else {
+			stopDrive();
+		}
+
+
+	}
+
+	/*	method to be used aim in autonomous mode -Ahmed, Keon, Malachi P, */
+	public void runAutoStratgy_noCamSidePegLeft(Timer timerAuto) {
+
+		double timeC = timerAuto.get();
+if(timeC<.5){
+	holdGear();
+}
+else if (timeC < 2.8) {
+			this.goForwardVoltage(4.0);
+			rotateUp();
+		} else if (timeC < 4.0) {
+			autoTurn(60);
+		} else if (timeC < 7.0) {
+			this.goForwardVoltage(4.0);
+			//DEAD RECKONING
+		} else if (timeC < 8.0){
+			stopDrive();
+			dropGear();
+		}  else if (timeC < 10.0){
+			this.goBackwardVoltage(4.0);
 		} else {
 			stopDrive();
 		}
@@ -973,18 +1010,64 @@ double lastUsedAngle;
 
 		double timeD = timerAuto.get();
 
-		if (timeD <5.0){
+		if(timeD < 5.0){
+			goForwardVoltage(4.0);
 			holdGear();
-			goForwardAtSpeed(0.3);
 			rotateUp();
-		} else if (timeD < 6.0){
-			stopDrive();
+		} else if (timeD <6.0){
+			stopVoltage();
 			dropGear();
-		} else if(timeD < 8.0){
-			goBackwardAtSpeed(0.3);
+//goForwardAtSpeed(0.4);
+	
+		} else if (timeD < 8.0){
+			this.goBackwardVoltage(4.0);;
 		} else{
-			stopDrive();
+			stopVoltage();
+			//stopDrive();
 		}
+	}
+	
+	public void goForwardVoltage(double newMax){
+	
+		
+		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.frontRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		
+		frontLeft.set(newMax);
+		frontRight.set(-newMax);
+		rearLeft.set(newMax);
+		rearRight.set(-newMax);
+	
+}
+
+	
+	public void goBackwardVoltage(double newMax){
+		
+		
+		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.frontRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		this.rearRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
+		
+		frontLeft.set(-newMax);
+		frontRight.set(newMax);
+		rearLeft.set(-newMax);
+		rearRight.set(newMax);
+	
+}
+
+	
+	
+	
+	public void stopVoltage(){
+
+			frontLeft.set(0.0);
+			frontRight.set(0.0);
+			rearLeft.set(0.0);
+			rearRight.set(0.0);
+		
 	}
 
 
