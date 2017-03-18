@@ -45,7 +45,7 @@ public class Robot extends SampleRobot {
 	CANTalon climber = new CANTalon(5);
 	CANTalon miniGearFRight = new CANTalon(6);
 	CANTalon miniGearFLeft = new CANTalon(7);
-double lastUsedAngle;
+	double lastUsedAngle;
 	Relay compressorRelay = new Relay(0);
 	Relay hockeyRelay = new Relay(1);
 	Relay hovaRelay = new Relay(2);
@@ -139,10 +139,10 @@ double lastUsedAngle;
 
 	/* This function is called periodically during autonomous */
 	public void autonomous() {
-		
+
 
 		//This should be tested
-		
+
 		changeDrivingToVoltage();
 
 		robotDrive.setSafetyEnabled(false);
@@ -154,10 +154,11 @@ double lastUsedAngle;
 
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("AutoTimer",timerA);
-			runAutoStrategy_noCamFrontPeg(timerAuto);
-		//	runAutoStrategy_noCamSidePegLeft(timerAuto);
-		//	runAutoStratgy_noCamSidePegRight(timerAuto);
-			
+			//runAutoStrategy_noCamFrontPeg(timerAuto);
+		//	runAutoStrategy_GoForwardOnly(timerAuto);
+			runAutoStratgy_noCamSidePegLeft(timerAuto);
+		//		runAutoStratgy_noCamSidePegRight(timerAuto);
+
 			/*
 			if(currentStrategy == 1) {
 				runAutoStrategy_GoForwardOnly(timerAuto);
@@ -171,7 +172,7 @@ double lastUsedAngle;
 			} else if (currentStrategy == 4) {
 				runAutoStratgy_noCamSidePegRight(timerAuto);
 			}
-			*/
+			 */
 		}
 	}
 
@@ -179,13 +180,13 @@ double lastUsedAngle;
 	public void operatorControl() {
 		//System.out.println("operatorControl");
 		this.changeDrivingToPercent();
-		
+
 		robotDrive.setSafetyEnabled(true);
 
 		while (isOperatorControl() && isEnabled()) {
 
 			/*Driving commands		*/
-			
+
 			checkDriving();
 			//checkGyroFlag(); //always keep on!
 			checkAutoTurn();
@@ -193,7 +194,7 @@ double lastUsedAngle;
 			printGyro();
 			getCurrentAngle();
 			checkCamStrafe();
-			
+
 			/*Gear Collection commands			*/
 			checkMiniGears();
 			isGear();
@@ -287,8 +288,8 @@ double lastUsedAngle;
 		}
 	}
 
-	
-	
+
+
 	/* Joystick method to eat and spit gears on ground	*/
 	public void checkMiniGears() {
 		double thresh = 0.2;
@@ -302,11 +303,11 @@ double lastUsedAngle;
 		}
 	}
 
-	
-	
-	
-	
-	
+
+
+
+
+
 	/* Joystick Method to rotate the Gears/hova up from ground in positino to score	-Jamesey	*/
 	public void checkHova(){
 		if(manipStick.getPOV()==this.POV_UP){
@@ -316,10 +317,10 @@ double lastUsedAngle;
 		if(manipStick.getPOV()==this.POV_DOWN){
 
 			//	holdGear();
-				rotateDown();
-				
+			rotateDown();
+
 		}
-	
+
 	}
 
 	/* Joystick method to grab and ungrab the gears with the hockey-stick shaped claw -imani l */
@@ -509,7 +510,7 @@ double lastUsedAngle;
 
 	/* basic "hova" rotation methods	*/
 	public void rotateUp(){
-	
+
 		hovaRelay.set(Relay.Value.kForward); 	
 	}
 	public void rotateDown(){
@@ -577,38 +578,38 @@ double lastUsedAngle;
 		return modAngle;
 	}
 
-	
+
 	/* method to align the robot to the peg using the camera from 3 feet away -Ahmahna	*/
 	public void camStrafe(){
-		
+
 		int leftmost = hkcam.getLeftMost();		//200
 		int target = 300;
 		int thresh = 10;
 		double speed = 0.4;
-		
+
 		//strafe to the left
 		if( leftmost!=0 || leftmost!=640 || leftmost!=1){
-		if (leftmost - thresh < target  ){
-			robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
-			SmartDashboard.putString("camStrafe", "STRAFE LEFT");
-		} else if (leftmost + thresh > target){
-			robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
-			SmartDashboard.putString("camStrafe", "STRAFE RIGHT");
-		} else {
-			this.stopDrive();
-			SmartDashboard.putString("camStrafe", "STOP!");
-		}
+			if (leftmost - thresh < target  ){
+				robotDrive.mecanumDrive_Cartesian(-speed, 0, 0, 0);
+				SmartDashboard.putString("camStrafe", "STRAFE LEFT");
+			} else if (leftmost + thresh > target){
+				robotDrive.mecanumDrive_Cartesian(speed, 0, 0, 0);
+				SmartDashboard.putString("camStrafe", "STRAFE RIGHT");
+			} else {
+				this.stopDrive();
+				SmartDashboard.putString("camStrafe", "STOP!");
+			}
 		}
 		else {
 			stopDrive();
 		}
-		
-		
-		
+
+
+
 	}
-	
-	
-	
+
+
+
 	/* method to change the angle of the robot based off the gyro  -Ahmed A & Jamzii 
 	 * @PARAM futureAngle should be an int between 0 and 359	
 	 * */
@@ -653,7 +654,7 @@ double lastUsedAngle;
 
 		//find correct speed to turn
 		double desired_speed = autoTurnSpeed(futureAngle);
-		
+
 		double strafeSpeedLeft= driverStick.getRawAxis(LT_AXIS);
 		double strafeSpeedRight = driverStick.getRawAxis(RT_AXIS);
 		double strafeSpeedActual=0;
@@ -664,9 +665,9 @@ double lastUsedAngle;
 		}
 		else if (strafeSpeedRight>0){
 			strafeSpeedActual=(Math.pow(strafeSpeedRight,2)/.3)+minMotorSpeed;
-			}
-		
-		
+		}
+
+
 
 		//keep turning until within the tolerance from desired angle
 		robotDrive.mecanumDrive_Cartesian(strafeSpeedActual, desired_speed, 0, 0);
@@ -754,7 +755,7 @@ double lastUsedAngle;
 	public void comboAimRobot(double pegAngle) { 
 
 		//DRIVING values
-		
+
 		double aimFwdSpeed = 0.3;
 		double aimStrafeSpeed = 0.0;
 		double turnSpeed = 0.0;
@@ -795,8 +796,8 @@ double lastUsedAngle;
 		}
 
 		 */
-		
-		
+
+
 		double distance = getDistanceUS();
 		/*
 		//this is calculating distance based on the ultrasonic censor
@@ -809,10 +810,10 @@ double lastUsedAngle;
 		else if (distance>43 && distance<120 ){
 			aimFwdSpeed=1.0;
 		}
-		*/
-		
-		
-		
+		 */
+
+
+
 		//This is to aim using ultrasonic with the assistance of the camera
 		if(distance==-5 && widthDifference>pixelThreshold){
 			aimFwdSpeed = minMotorSpeed + ((widthDifference/250) / ( 1 - minMotorSpeed));
@@ -833,7 +834,7 @@ double lastUsedAngle;
 		//DRIVE robot towards peg
 		//robotDrive.mecanumDrive_Cartesian(aimFwdSpeed, turnSpeed, aimStrafeSpeed, 0);
 		robotDrive.mecanumDrive_Cartesian(aimStrafeSpeed, aimFwdSpeed, turnSpeed, 0);
-		
+
 		SmartDashboard.putNumber("aimFwdSpeed", aimFwdSpeed);
 		SmartDashboard.putNumber("aimStrafeSpeed", aimStrafeSpeed);
 		SmartDashboard.putNumber("aimTurnSpeed", turnSpeed);
@@ -902,7 +903,7 @@ double lastUsedAngle;
 	}
 
 	public void goForwardAtSpeed(double speed) {
-		
+
 		robotDrive.mecanumDrive_Cartesian(0, 0,  speed, 0);
 	}
 
@@ -943,11 +944,11 @@ double lastUsedAngle;
 	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
 	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
 		double timeA = timerAuto.get();
-		if(timeA < 1) {
-			goForwardAtSpeed(0.4);
+		if(timeA < 5.0) {
+			goForwardVoltage(4.0);
 		}
 		else{
-			stopDrive();
+			stopVoltage();
 		}
 	}
 
@@ -955,24 +956,24 @@ double lastUsedAngle;
 	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 	public void runAutoStratgy_noCamSidePegRight(Timer timerAuto) {
 		double timeC = timerAuto.get();
-if(timeC<.5){
-	holdGear();
-}
-else if (timeC < 2.8) {
-			this.goForwardVoltage(4.0);
-			rotateUp();
-		} else if (timeC < 4.0) {
+		if(timeC<.5){
+			holdGear();
+		}
+		else if (timeC < 3.7) {
+			this.goForwardVoltage(4.0); 
+		//	rotateUp();
+		} else if (timeC < 5.0) {
 			autoTurn(300);
-		} else if (timeC < 7.0) {
+		} else if (timeC < 7.8) {
 			this.goForwardVoltage(4.0);
 			//DEAD RECKONING
-		} else if (timeC < 8.0){
+		} else if (timeC < 9.0){
 			stopDrive();
-			dropGear();
-		}  else if (timeC < 10.0){
+		//	dropGear();
+		}  else if (timeC < 11.0 ){
 			this.goBackwardVoltage(4.0);
 		} else {
-			stopDrive();
+			stopVoltage();
 		}
 
 
@@ -982,24 +983,24 @@ else if (timeC < 2.8) {
 	public void runAutoStratgy_noCamSidePegLeft(Timer timerAuto) {
 
 		double timeC = timerAuto.get();
-if(timeC<.5){
-	holdGear();
-}
-else if (timeC < 2.8) {
-			this.goForwardVoltage(4.0);
+		if(timeC<.5){
+			holdGear();
+		}
+		else if (timeC < 3.5) {
+			this.goForwardVoltage(4.0); 
 			rotateUp();
-		} else if (timeC < 4.0) {
+		} else if (timeC < 4.8 ) {
 			autoTurn(60);
-		} else if (timeC < 7.0) {
+		} else if (timeC < 7.6) {
 			this.goForwardVoltage(4.0);
 			//DEAD RECKONING
-		} else if (timeC < 8.0){
+		} else if (timeC < 8.8){
 			stopDrive();
 			dropGear();
-		}  else if (timeC < 10.0){
+		}  else if (timeC < 10.8 ){
 			this.goBackwardVoltage(4.0);
 		} else {
-			stopDrive();
+			stopVoltage();
 		}
 
 	}
@@ -1017,8 +1018,8 @@ else if (timeC < 2.8) {
 		} else if (timeD <6.0){
 			stopVoltage();
 			dropGear();
-//goForwardAtSpeed(0.4);
-	
+			//goForwardAtSpeed(0.4);
+
 		} else if (timeD < 8.0){
 			this.goBackwardVoltage(4.0);;
 		} else{
@@ -1026,49 +1027,50 @@ else if (timeC < 2.8) {
 			//stopDrive();
 		}
 	}
-	
+
 	public void goForwardVoltage(double newMax){
-	
-		
+
+
 		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.frontRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.rearRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
-		
+
 		frontLeft.set(newMax);
 		frontRight.set(-newMax);
 		rearLeft.set(newMax);
 		rearRight.set(-newMax);
-	
-}
 
-	
+	}
+
+
 	public void goBackwardVoltage(double newMax){
-		
-		
+
+
 		this.frontLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.rearLeft.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.frontRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
 		this.rearRight.changeControlMode(CANTalon.TalonControlMode.Voltage);
-		
+
 		frontLeft.set(-newMax);
 		frontRight.set(newMax);
 		rearLeft.set(-newMax);
 		rearRight.set(newMax);
-	
-}
 
-	
-	
-	
+	}
+
+
+
+
 	public void stopVoltage(){
 
-			frontLeft.set(0.0);
-			frontRight.set(0.0);
-			rearLeft.set(0.0);
-			rearRight.set(0.0);
-		
+		frontLeft.set(0.0);
+		frontRight.set(0.0);
+		rearLeft.set(0.0);
+		rearRight.set(0.0);
+
 	}
+
 
 
 
