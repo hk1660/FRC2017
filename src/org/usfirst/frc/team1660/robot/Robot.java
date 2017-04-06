@@ -193,7 +193,7 @@ public class Robot extends SampleRobot {
 			checkResetGyro();
 			printGyro();
 			getCurrentAngle();
-			checkCamStrafe();
+			//checkCfamStrafe();
 
 			/*Gear Collection commands			*/
 			checkMiniGears();
@@ -332,7 +332,13 @@ public class Robot extends SampleRobot {
 			dropGear();
 		}
 	}
+	 public void checkGrab(){
+		if (manipStick.getRawButton(B_BUTTON)) {
+	      this.holdGear();
+		}
+	 }
 
+	
 	/* Joystick method to climb rope	*/
 	public void checkClimbRope(){
 
@@ -428,7 +434,7 @@ public class Robot extends SampleRobot {
 
 	/* Joystick Combo method to pick up a gear -Donashia	*/
 	public void checkComboGroundLoad(){
-		if(manipStick.getRawButton(Y_BUTTON) == true){
+		if(manipStick.getRawButton(A_BUTTON) == true){
 			this.comboGroundLoad();
 		}
 	}
@@ -447,17 +453,22 @@ public class Robot extends SampleRobot {
 	Timer x = new Timer();
 	/* Joystick Combo method to place a gear on a peg automatically		-Shivanie H	*/
 	public void checkComboPlaceGear(){
-		if(manipStick.getRawButton(B_BUTTON) == true){
+		if(manipStick.getRawButton(Y_BUTTON) == true){
 			comboPlaceGear();
 			x.start();
 		}
-		if (x.get() > 1){
+		/*if (x.get() > 1){
 			dropGear();
 			x.reset();
 			x.stop();
+		} */
+	}
+    
+	public void checkComboSpitout() {
+		if (manipStick.getRawButton(X_BUTTON)) {
+	        this.checkComboSpitout();
 		}
 	}
-
 
 	/* ----------	SENSOR ACCESSOR METHODS	--------------------------------------------------------------------------*/
 
@@ -674,11 +685,16 @@ public class Robot extends SampleRobot {
 
 	}
 
-
+ 
 	/* ----------	COMBO ROBOT FUNCTIONS	--------------------------------------------------------------------------*/
 
 	/* Combo method to Pick up a Gear from the Ground -Donashia and Jamesey	*/
-	Timer comboGroundLoadTimer = new Timer();
+   public void comboSpitOut() {
+	   this.dropGear();
+	   this.takeMiniGears();
+   }
+   
+   Timer comboGroundLoadTimer = new Timer();
 	double eatTime = 0.0;
 	boolean groundFlag = false;
 	boolean eatFlag = false;
@@ -690,7 +706,7 @@ public class Robot extends SampleRobot {
 			groundFlag = true;
 			comboGroundLoadTimer.reset();
 			comboGroundLoadTimer.start();
-
+            this.holdGear();
 			this.rotateDown();
 			this.dropGear();
 		}
