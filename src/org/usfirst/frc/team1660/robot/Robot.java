@@ -123,10 +123,9 @@ public class Robot extends SampleRobot {
 		 */
 
 		strategy = new SendableChooser();
-		strategy.addDefault("Move forward only", new Integer(1));
-		strategy.addObject("Place Gear Left-Peg", new Integer(2));
-		strategy.addObject("No-Cam Front-Peg", new Integer(3));
-		strategy.addObject("No-Cam Left-Peg", new Integer(4));
+		strategy.addDefault("(BLUE) Right Peg", new Integer(1));
+		strategy.addObject("(RED) Left Peg", new Integer(2));
+		strategy.addObject("Middle Peg", new Integer(3));
 		SmartDashboard.putData("strategy selector", strategy);
 
 		//Start match with zeroed gyro, and grabbing gear down
@@ -154,25 +153,20 @@ public class Robot extends SampleRobot {
 
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("AutoTimer",timerA);
-			//runAutoStrategy_noCamFrontPeg(timerAuto);
-		//	runAutoStrategy_GoForwardOnly(timerAuto);
-			runAutoStratgy_noCamSidePegLeft(timerAuto);
-		//		runAutoStratgy_noCamSidePegRight(timerAuto);
-
-			/*
+		//runAutoStrategy_noCamFrontPeg(timerAuto);
+		//	runAutoStratgy_noCamSidePegLeft(timerAuto);
+			runAutoStratgy_noCamSidePegRight(timerAuto);
+		
+	/*
 			if(currentStrategy == 1) {
-				runAutoStrategy_GoForwardOnly(timerAuto);
-
+				runAutoStratgy_noCamSidePegRight(timerAuto);
 			} else if (currentStrategy == 2) {
-				runAutoStrategy_PlaceGearLeftPeg(timerAuto);
+				runAutoStratgy_noCamSidePegLeft(timerAuto);
 
 			} else if (currentStrategy == 3){
 				runAutoStrategy_noCamFrontPeg(timerAuto);
-
-			} else if (currentStrategy == 4) {
-				runAutoStratgy_noCamSidePegRight(timerAuto);
-			}
-			 */
+			} 
+			*/
 		}
 	}
 
@@ -202,18 +196,20 @@ public class Robot extends SampleRobot {
 			checkHova();
 			//checkCompressor();
 			checkCompressorSwitch();
-			//checkComboGroundLoad();
-
-
+	//		checkComboGroundLoad();
+		//	checkComboGroundLoad();
 			/* Gear Placing commands		*/
 			getPegX();
 			getDistanceUS();
+		//	checkComboPlaceGear();
+		//	checkComboSpitout();
+		//	comboSpitOut();
 			//checkComboAimRobot();	//60 degrees?
 			checkComboPlaceGear();
 
 			/* Climbing commands	*/
 			checkClimbRope();
-
+			checkCamStrafe();
 			/*Camera Testing		*/
 			changeExposure();
 
@@ -384,17 +380,17 @@ public class Robot extends SampleRobot {
 	public void changeExposure(){
 
 		if(driverStick.getRawButton(RB_BUTTON) == true){
-			white=white+1;
-			if(white>90){
-				white=90;
-			}
+		//	white=white+1;
+			//if(white>90){
+				white=25;
+		//	}
 			hkcam.camera.setExposureManual(white);
 		}
 		if(driverStick.getRawButton(LB_BUTTON) == true){
-			white=white-1;
-			if(white<0){
+	//		white=white-1;
+		//	if(white<0){
 				white=0;
-			}
+		//	}
 			hkcam.camera.setExposureManual(white);
 
 		}
@@ -702,15 +698,15 @@ public class Robot extends SampleRobot {
 	public void comboGroundLoad() {
 
 		//start the method's timer & Make sure claw is down & open
-		if(groundFlag == false){
-			groundFlag = true;
-			comboGroundLoadTimer.reset();
-			comboGroundLoadTimer.start();
+	//	if(groundFlag == false){
+	//		groundFlag = true;
+		//	comboGroundLoadTimer.reset();
+		//	comboGroundLoadTimer.start();
             this.holdGear();
 			this.rotateDown();
 			this.dropGear();
-		}
-
+//		}
+/*
 		//try to grab a gear for at most 5 seconds
 		if(comboGroundLoadTimer.get() < 5.0 && isGear() == false){
 			takeMiniGears();			
@@ -737,6 +733,7 @@ public class Robot extends SampleRobot {
 			groundFlag = false;
 			eatFlag = false;
 		}
+		*/
 	}
 
 	/* Combo method to reposition the GearScorer after a score or drop -Ahmed A & Jamesey	*/
@@ -975,18 +972,18 @@ public class Robot extends SampleRobot {
 		if(timeC<.5){
 			holdGear();
 		}
-		else if (timeC < 3.7) {
+		else if (timeC < 3.35) {
 			this.goForwardVoltage(4.0); 
-		//	rotateUp();
-		} else if (timeC < 5.0) {
+			rotateUp();
+		} else if (timeC < 4.65) {
 			autoTurn(300);
-		} else if (timeC < 7.8) {
+		} else if (timeC < 7.45) {
 			this.goForwardVoltage(4.0);
 			//DEAD RECKONING
-		} else if (timeC < 9.0){
-			stopDrive();
-		//	dropGear();
-		}  else if (timeC < 11.0 ){
+		} else if (timeC < 8.65){
+			stopVoltage();
+			dropGear();
+		}  else if (timeC < 10.65 ){
 			this.goBackwardVoltage(4.0);
 		} else {
 			stopVoltage();
@@ -1002,18 +999,18 @@ public class Robot extends SampleRobot {
 		if(timeC<.5){
 			holdGear();
 		}
-		else if (timeC < 3.5) {
+		else if (timeC < 3.35) {
 			this.goForwardVoltage(4.0); 
 			rotateUp();
-		} else if (timeC < 4.8 ) {
+		} else if (timeC < 4.65 ) {
 			autoTurn(60);
-		} else if (timeC < 7.6) {
+		} else if (timeC < 7.45) {
 			this.goForwardVoltage(4.0);
 			//DEAD RECKONING
-		} else if (timeC < 8.8){
-			stopDrive();
-			dropGear();
-		}  else if (timeC < 10.8 ){
+		} else if (timeC < 8.65){
+			stopVoltage();
+		//	dropGear();
+		}  else if (timeC < 10.65 ){
 			this.goBackwardVoltage(4.0);
 		} else {
 			stopVoltage();
@@ -1040,7 +1037,6 @@ public class Robot extends SampleRobot {
 			this.goBackwardVoltage(4.0);;
 		} else{
 			stopVoltage();
-			//stopDrive();
 		}
 	}
 
