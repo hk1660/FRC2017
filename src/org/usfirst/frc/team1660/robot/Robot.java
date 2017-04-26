@@ -953,70 +953,73 @@ public class Robot extends SampleRobot {
 	/* ------------------------------------------------------------------------------------*/
 	/* COMBO AUTONOMOUS METHODS */
 
-
 	//Simple Go forward AUTO strategy -Imani L, Ryan T, and Ahmed A
-	public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
-		double timeA = timerAuto.get();
-		if(timeA < 5.0) {
-			goForwardVoltage(4.0);
-		}
-		else{
-			stopVoltage();
-		}
-	}
-
-
-	//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
-	public void runAutoStratgy_noCamSidePegRight(Timer timerAuto) {
-		double timeC = timerAuto.get();
-		if(timeC<.5){
-			holdGear();
-		}
-		else if (timeC < 3.35) {
-			this.goForwardVoltage(4.0); 
-			rotateUp();
-		} else if (timeC < 4.65) {
-			autoTurn(300);
-		} else if (timeC < 7.45) {
-			this.goForwardVoltage(4.0);
-			//DEAD RECKONING
-		} else if (timeC < 8.65){
-			stopVoltage();
-			dropGear();
-		}  else if (timeC < 10.65 ){
-			this.goBackwardVoltage(4.0);
-		} else {
-			stopVoltage();
+		public void runAutoStrategy_GoForwardOnly(Timer timerAuto) {
+			double timeA = timerAuto.get();
+			if(timeA < 5.0) {
+				goForwardVoltage(4.0);
+			}
+			else{
+				stopVoltage();
+			}
 		}
 
 
-	}
+
+		//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
+		public void runAutoStratgy_noCamSidePegRight(Timer timerAuto) {
+			double timeC = timerAuto.get();
+			if(timeC<.5){
+				holdGear();
+			}
+			else if (timeC < 3.66) {
+				this.goForwardVoltage(4.0); 
+				rotateUp();
+			} else if (timeC < 4.95) {
+				autoTurn(300);
+			} else if (timeC < 7.75) {
+				this.goForwardVoltage(4.0);
+				//DEAD RECKONING
+			} else if (timeC < 8.95){
+				stopVoltage();
+				dropGear();
+			}  else if (timeC < 9.95 ){
+				this.goBackwardVoltage(4.0);
+			} else {
+				stopVoltage();
+			}
+
+
+		}
 
 	/*	method to be used aim in autonomous mode -Ahmed, Keon, Malachi P, */
-	public void runAutoStratgy_noCamSidePegLeft(Timer timerAuto) {
 
-		double timeC = timerAuto.get();
-		if(timeC<.5){
-			holdGear();
-		}
-		else if (timeC < 3.35) {
-			this.goForwardVoltage(4.0); 
-			rotateUp();
-		} else if (timeC < 4.65 ) {
-			autoTurn(60);
-		} else if (timeC < 7.45) {
-			this.goForwardVoltage(4.0);
-			//DEAD RECKONING
-		} else if (timeC < 8.65){
-			stopVoltage();
-		//	dropGear();
-		}  else if (timeC < 10.65 ){
-			this.goBackwardVoltage(4.0);
-		} else {
-			stopVoltage();
+		/*	method to be used aim in autonomous mode -Ahmed, Keon, Malachi P, */
+		public void runAutoStratgy_noCamSidePegLeft(Timer timerAuto) {
+
+			double timeC = timerAuto.get();
+			if(timeC<.5){
+				holdGear();
+			}
+			else if (timeC < 3.48) {
+				this.goForwardVoltage(4.0); 
+				rotateUp();
+			} else if (timeC < 4.77 ) {
+				autoTurn(60);
+			} else if (timeC < 7.57) {
+				this.goForwardVoltage(4.0);
+				//DEAD RECKONING
+			} else if (timeC < 8.77){
+				stopVoltage();
+				dropGear();
+			}  else if (timeC < 9.77 ){
+				this.goBackwardVoltage(4.0);
+			} else {
+				stopVoltage();
+			}
+
 		}
 
-	}
 
 
 	/* Auto strategy for front peg if camera is not working	-Ahmed	*/
