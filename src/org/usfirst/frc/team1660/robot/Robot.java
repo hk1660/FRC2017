@@ -127,11 +127,11 @@ public class Robot extends SampleRobot {
 		strategy.addObject("(RED) Left Peg", new Integer(2));
 		strategy.addObject("Middle Peg", new Integer(3));
 		SmartDashboard.putData("strategy selector", strategy);
-
 		//Start match with zeroed gyro, and grabbing gear down
 		zeroedYawPoint = ahrs.getAngle();
 		rotateDown();
 		holdGear();
+
 
 	}
 
@@ -154,10 +154,10 @@ public class Robot extends SampleRobot {
 			double timerA = timerAuto.get();
 			SmartDashboard.putNumber("AutoTimer",timerA);
 		//runAutoStrategy_noCamFrontPeg(timerAuto);
-		//	runAutoStratgy_noCamSidePegLeft(timerAuto);
-			runAutoStratgy_noCamSidePegRight(timerAuto);
+		//	runAut oStratgy_noCamSidePegLeft(timerAuto);			//RED
+		//	runAutoStratgy_noCamSidePegRight(timerAuto);		//BLUE
 		
-	/*
+	
 			if(currentStrategy == 1) {
 				runAutoStratgy_noCamSidePegRight(timerAuto);
 			} else if (currentStrategy == 2) {
@@ -166,7 +166,7 @@ public class Robot extends SampleRobot {
 			} else if (currentStrategy == 3){
 				runAutoStrategy_noCamFrontPeg(timerAuto);
 			} 
-			*/
+			
 		}
 	}
 
@@ -969,21 +969,26 @@ public class Robot extends SampleRobot {
 		//Place 1 gear on the LEFT peg Auto Strategy -Shivanie H & Jayda W
 		public void runAutoStratgy_noCamSidePegRight(Timer timerAuto) {
 			double timeC = timerAuto.get();
-			if(timeC<.5){
+			
+			
+			
+			
+			
+							checkCompressorSwitch();
+		
+			if (timeC < 3.17) {
 				holdGear();
-			}
-			else if (timeC < 3.66) {
 				this.goForwardVoltage(4.0); 
 				rotateUp();
-			} else if (timeC < 4.95) {
+			} else if (timeC < 4.47) {
 				autoTurn(300);
-			} else if (timeC < 7.75) {
-				this.goForwardVoltage(4.0);
+			} else if (timeC < 6.47) {
+				this.goForwardVoltage(6.0);
 				//DEAD RECKONING
-			} else if (timeC < 8.95){
+			} else if (timeC < 7.07){
 				stopVoltage();
 				dropGear();
-			}  else if (timeC < 9.95 ){
+			}  else if (timeC < 9.07 ){
 				this.goBackwardVoltage(4.0);
 			} else {
 				stopVoltage();
@@ -998,26 +1003,25 @@ public class Robot extends SampleRobot {
 		public void runAutoStratgy_noCamSidePegLeft(Timer timerAuto) {
 
 			double timeC = timerAuto.get();
-			if(timeC<.5){
+			checkCompressorSwitch();
+
+			if (timeC < 3.00) {
 				holdGear();
-			}
-			else if (timeC < 3.48) {
 				this.goForwardVoltage(4.0); 
 				rotateUp();
-			} else if (timeC < 4.77 ) {
+			} else if (timeC < 4.47) {
 				autoTurn(60);
-			} else if (timeC < 7.57) {
-				this.goForwardVoltage(4.0);
+			} else if (timeC < 6.47) {
+				this.goForwardVoltage(6.0);
 				//DEAD RECKONING
-			} else if (timeC < 8.77){
+			} else if (timeC < 7.07){
 				stopVoltage();
 				dropGear();
-			}  else if (timeC < 9.77 ){
+			}  else if (timeC < 9.07 ){
 				this.goBackwardVoltage(4.0);
 			} else {
 				stopVoltage();
 			}
-
 		}
 
 
@@ -1026,7 +1030,7 @@ public class Robot extends SampleRobot {
 	public void runAutoStrategy_noCamFrontPeg(Timer timerAuto){
 
 		double timeD = timerAuto.get();
-
+		checkCompressorSwitch();
 		if(timeD < 5.0){
 			goForwardVoltage(4.0);
 			holdGear();
